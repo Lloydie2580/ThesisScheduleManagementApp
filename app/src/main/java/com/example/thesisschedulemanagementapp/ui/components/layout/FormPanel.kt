@@ -2,8 +2,6 @@ package com.example.thesisschedulemanagementapp.ui.components.layout
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,37 +15,13 @@ fun FormPanel(
     subtitle: String,
     content: @Composable () -> Unit
 ) {
-
-    Spacer(
-        modifier = androidx.compose.ui.Modifier.height(Dimens.SpaceXL)
-    )
-
     AppCard {
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)
-        ) {
-
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(
-                modifier = androidx.compose.ui.Modifier.height(Dimens.SpaceS)
-            )
-
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
+                Text(text = title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             content()
-
         }
-
     }
-
 }

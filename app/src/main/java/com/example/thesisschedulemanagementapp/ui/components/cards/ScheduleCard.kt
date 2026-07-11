@@ -1,417 +1,142 @@
 package com.example.thesisschedulemanagementapp.ui.components.cards
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 
 import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
-
 import com.example.thesisschedulemanagementapp.ui.components.common.AppButton
 import com.example.thesisschedulemanagementapp.ui.components.common.AppCard
-
 import com.example.thesisschedulemanagementapp.ui.components.feedback.StatusChip
-
 import com.example.thesisschedulemanagementapp.ui.models.ButtonType
 import com.example.thesisschedulemanagementapp.ui.models.ScheduleStatus
-
-import com.example.thesisschedulemanagementapp.ui.theme.Dimens
-
+import com.example.thesisschedulemanagementapp.ui.theme.*
 
 @Composable
 fun ScheduleCard(
-
     schedule: DefenseSchedule,
-
     modifier: Modifier = Modifier,
-
     canManage: Boolean = false,
-
     onEdit: (() -> Unit)? = null,
-
     onCancel: (() -> Unit)? = null,
-
     onComplete: (() -> Unit)? = null,
-
     onDelete: (() -> Unit)? = null
-
 ) {
+    AppCard(modifier = modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
 
-
-    AppCard(
-        modifier = modifier.fillMaxWidth()
-    ) {
-
-
-        Column(
-
-            verticalArrangement =
-                Arrangement.spacedBy(
-                    Dimens.SpaceM
-                )
-
-        ) {
-
-
-
-            Row {
-
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-
-
+            Row(verticalAlignment = Alignment.Top) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-
                         text = schedule.researchTitle,
-
-                        style =
-                            MaterialTheme.typography.titleLarge,
-
-                        fontWeight =
-                            FontWeight.Bold,
-
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                         maxLines = 2,
-
-                        overflow =
-                            TextOverflow.Ellipsis
-
+                        overflow = TextOverflow.Ellipsis
                     )
-
-
-
                     Text(
-
-                        text =
-                            "Group ${schedule.groupCode}",
-
-                        style =
-                            MaterialTheme.typography.bodyMedium,
-
-                        color =
-                            MaterialTheme.colorScheme.onSurfaceVariant
-
+                        text = "Group ${schedule.groupCode}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-
-
                 }
-
-
-
-                StatusChip(
-
-                    status =
-                        ScheduleStatus.from(
-                            schedule.status
-                        )
-
-                )
-
-
+                Spacer(modifier = Modifier.width(Dimens.SpaceS))
+                StatusChip(status = ScheduleStatus.from(schedule.status))
             }
 
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
+                ScheduleInfoRow(Icons.Default.CalendarToday, schedule.defenseDate, ChipLavender, ChipLavenderOn)
+                ScheduleInfoRow(Icons.Default.Schedule, "${schedule.startTime} - ${schedule.endTime}", ChipMint, ChipMintOn)
+                ScheduleInfoRow(Icons.Default.LocationOn, schedule.roomName, ChipPeach, ChipPeachOn)
+            }
 
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
-            ScheduleInfoRow(
-
-                Icons.Default.CalendarToday,
-
-                schedule.defenseDate
-
-            )
-
-
-
-            ScheduleInfoRow(
-
-                Icons.Default.Schedule,
-
-                "${schedule.startTime} - ${schedule.endTime}"
-
-            )
-
-
-
-            ScheduleInfoRow(
-
-                Icons.Default.LocationOn,
-
-                schedule.roomName
-
-            )
-
-
-
-
-            Column {
-
-
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
                 Text(
-
                     text = "Adviser",
-
-                    style =
-                        MaterialTheme.typography.labelMedium,
-
-                    color =
-                        MaterialTheme.colorScheme.primary
-
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
                 )
-
-
-                Text(
-
-                    text =
-                        schedule.adviserName,
-
-                    style =
-                        MaterialTheme.typography.bodyMedium
-
-                )
-
-
+                Text(text = schedule.adviserName, style = MaterialTheme.typography.bodyMedium)
             }
 
-
-
-
-
-            if(schedule.panelists.isNotEmpty()) {
-
-
-                Column {
-
-
+            if (schedule.panelists.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
                     Text(
-
                         text = "Panelists",
-
-                        style =
-                            MaterialTheme.typography.labelMedium,
-
-                        color =
-                            MaterialTheme.colorScheme.primary
-
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
                     )
-
-
                     Text(
-
-                        text =
-                            schedule.panelists.joinToString {
-                                it.fullName
-                            },
-
-                        style =
-                            MaterialTheme.typography.bodyMedium
-
+                        text = schedule.panelists.joinToString { it.fullName },
+                        style = MaterialTheme.typography.bodyMedium
                     )
-
-
                 }
-
-
             }
 
-
-
-
-
-            if(canManage) {
-
-
-                Divider()
-
-
-
-                Text(
-
-                    text = "Actions",
-
-                    style =
-                        MaterialTheme.typography.labelMedium,
-
-                    color =
-                        MaterialTheme.colorScheme.primary
-
-                )
-
-
+            if (canManage) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
                 FlowRow(
-
-                    horizontalArrangement =
-                        Arrangement.spacedBy(
-                            Dimens.SpaceS
-                        ),
-
-                    verticalArrangement =
-                        Arrangement.spacedBy(
-                            Dimens.SpaceS
-                        )
-
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)
                 ) {
-
-
-
                     onEdit?.let {
-
-
-                        AppButton(
-
-                            text = "Edit",
-
-                            buttonType =
-                                ButtonType.OUTLINED,
-
-                            fullWidth = false,
-
-                            onClick = it
-
-                        )
-
-
+                        AppButton(text = "Edit", buttonType = ButtonType.OUTLINED, fullWidth = false, onClick = it)
                     }
-
-
-
                     onCancel?.let {
-
-
-                        AppButton(
-
-                            text = "Cancel",
-
-                            buttonType =
-                                ButtonType.OUTLINED,
-
-                            fullWidth = false,
-
-                            onClick = it
-
-                        )
-
-
+                        AppButton(text = "Cancel", buttonType = ButtonType.OUTLINED, fullWidth = false, onClick = it)
                     }
-
-
-
                     onComplete?.let {
-
-
-                        AppButton(
-
-                            text = "Complete",
-
-                            buttonType =
-                                ButtonType.PRIMARY,
-
-                            fullWidth = false,
-
-                            onClick = it
-
-                        )
-
-
+                        AppButton(text = "Complete", buttonType = ButtonType.PRIMARY, fullWidth = false, onClick = it)
                     }
-
-
-
                     onDelete?.let {
-
-
-                        AppButton(
-
-                            text = "Delete",
-
-                            buttonType =
-                                ButtonType.DANGER,
-
-                            fullWidth = false,
-
-                            onClick = it
-
-                        )
-
-
+                        AppButton(text = "Delete", buttonType = ButtonType.DANGER, fullWidth = false, onClick = it)
                     }
-
-
                 }
-
-
             }
-
-
         }
-
-
     }
-
-
 }
-
-
 
 @Composable
 private fun ScheduleInfoRow(
-
     icon: ImageVector,
-
-    text: String
-
+    text: String,
+    chipBg: Color,
+    chipOn: Color
 ) {
-
-
     Row(
-
-        horizontalArrangement =
-            Arrangement.spacedBy(
-                Dimens.SpaceS
-            )
-
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)
     ) {
-
-
-        Icon(
-
-            imageVector = icon,
-
-            contentDescription = null,
-
-            tint =
-                MaterialTheme.colorScheme.primary
-
-        )
-
-
-        Text(
-
-            text = text,
-
-            style =
-                MaterialTheme.typography.bodyMedium
-
-        )
-
-
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(chipBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(imageVector = icon, contentDescription = null, tint = chipOn, modifier = Modifier.size(16.dp))
+        }
+        Text(text = text, style = MaterialTheme.typography.bodyMedium)
     }
-
-
 }

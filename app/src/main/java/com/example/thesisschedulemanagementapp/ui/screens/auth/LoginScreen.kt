@@ -15,8 +15,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.Modifier
-import androidx.compose.foundation.layout.fillMaxWidth
 import com.example.thesisschedulemanagementapp.data.model.User
 import com.example.thesisschedulemanagementapp.ui.components.common.AppButton
 import com.example.thesisschedulemanagementapp.ui.components.common.AppTextField
@@ -24,6 +22,7 @@ import com.example.thesisschedulemanagementapp.ui.components.headers.AuthHeader
 import com.example.thesisschedulemanagementapp.ui.components.layout.FormPanel
 import com.example.thesisschedulemanagementapp.ui.components.layout.ScreenScaffold
 import com.example.thesisschedulemanagementapp.ui.models.ButtonType
+import com.example.thesisschedulemanagementapp.ui.theme.Dimens
 import com.example.thesisschedulemanagementapp.ui.theme.ThesisScheduleManagementTheme
 import com.example.thesisschedulemanagementapp.viewmodel.UiState
 
@@ -34,14 +33,11 @@ fun LoginScreen(
     onLogin: (String, String) -> Unit,
     onSignUp: () -> Unit
 ) {
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    val isValid =
-        email.isNotBlank() &&
-                password.isNotBlank()
+    val isValid = email.isNotBlank() && password.isNotBlank()
 
     ScreenScaffold(snackbarHostState) {
 
@@ -54,12 +50,7 @@ fun LoginScreen(
             title = "Welcome Back",
             subtitle = "Login using your student or professor account."
         ) {
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(
-                    com.example.thesisschedulemanagementapp.ui.theme.Dimens.SpaceM
-                )
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
 
                 AppTextField(
                     value = email,
@@ -83,24 +74,12 @@ fun LoginScreen(
                         imeAction = ImeAction.Done
                     ),
                     trailingIcon = {
-
-                        IconButton(
-                            onClick = {
-                                passwordVisible = !passwordVisible
-                            }
-                        ) {
-
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
-                                imageVector =
-                                    if (passwordVisible)
-                                        Icons.Default.VisibilityOff
-                                    else
-                                        Icons.Default.Visibility,
+                                imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                 contentDescription = null
                             )
-
                         }
-
                     }
                 )
 
@@ -109,9 +88,7 @@ fun LoginScreen(
                     loading = state.loading,
                     enabled = isValid,
                     buttonType = ButtonType.PRIMARY,
-                    onClick = {
-                        onLogin(email.trim(), password)
-                    }
+                    onClick = { onLogin(email.trim(), password) }
                 )
 
                 AppButton(
@@ -119,28 +96,20 @@ fun LoginScreen(
                     buttonType = ButtonType.OUTLINED,
                     onClick = onSignUp
                 )
-
             }
-
         }
-
     }
-
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun LoginPreview() {
-
     ThesisScheduleManagementTheme {
-
         LoginScreen(
             snackbarHostState = remember { SnackbarHostState() },
             state = UiState(),
             onLogin = { _, _ -> },
             onSignUp = {}
         )
-
     }
-
 }

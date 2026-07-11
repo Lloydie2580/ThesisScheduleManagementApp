@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -24,16 +23,16 @@ import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
 import com.example.thesisschedulemanagementapp.data.model.ScheduleRequest
 import com.example.thesisschedulemanagementapp.data.model.User
 import com.example.thesisschedulemanagementapp.ui.components.common.AppButton
-import com.example.thesisschedulemanagementapp.ui.components.common.AppCard
 import com.example.thesisschedulemanagementapp.ui.components.common.AppTextField
+import com.example.thesisschedulemanagementapp.ui.components.common.DatePickerField
+import com.example.thesisschedulemanagementapp.ui.components.common.TimePickerField
+import com.example.thesisschedulemanagementapp.ui.components.layout.FormPanel
 import com.example.thesisschedulemanagementapp.ui.components.layout.ScreenScaffold
 import com.example.thesisschedulemanagementapp.ui.components.headers.BackHeader
 import com.example.thesisschedulemanagementapp.ui.components.common.PickerField
 import com.example.thesisschedulemanagementapp.ui.theme.Dimens
-import com.example.thesisschedulemanagementapp.viewmodel.ScheduleManagementViewModel
-
-// ✅ Fixed to point to your new correct layout path
 import com.example.thesisschedulemanagementapp.ui.models.ButtonType
+import com.example.thesisschedulemanagementapp.viewmodel.ScheduleManagementViewModel
 
 @Composable
 fun ScheduleFormScreen(
@@ -68,17 +67,19 @@ fun ScheduleFormScreen(
         message?.let {
             snackbarHostState.showSnackbar(it.message)
             viewModel.clearMessage()
-
-            if (it.success) {
-                onBack()
-            }
+            if (it.success) onBack()
         }
     }
 
     ScreenScaffold(snackbarHostState) {
-        AppCard {
+
+        BackHeader(title, onBack)
+
+        FormPanel(
+            title = "Defense Details",
+            subtitle = "Fill in the schedule information below."
+        ) {
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-                BackHeader(title, onBack)
 
                 PickerField(
                     label = "Group",
@@ -99,32 +100,28 @@ fun ScheduleFormScreen(
                     label = "Research Title"
                 )
 
-                AppTextField(
+                DatePickerField(
+                    label = "Defense Date",
                     value = date,
-                    onValueChange = { date = it },
-                    label = "Defense Date"
+                    onValueChange = { date = it }
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
-                    AppTextField(
+                    TimePickerField(
+                        label = "Start Time",
                         value = startTime,
                         onValueChange = {
                             startTime = it
-                            viewModel.calculateEndTime(it)?.let { result ->
-                                endTime = result
-                            }
-                        },
-                        label = "Start Time",
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    AppTextField(
-                        value = endTime,
-                        onValueChange = { endTime = it },
-                        label = "End Time",
-                        modifier = Modifier.weight(1f)
+                            viewModel.calculateEndTime(it)?.let { result -> endTime = result }
+                        }
                     )
                 }
+
+                TimePickerField(
+                    label = "End Time",
+                    value = endTime,
+                    onValueChange = { endTime = it }
+                )
 
                 PickerField(
                     label = "Room",
@@ -152,44 +149,38 @@ fun ScheduleFormScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                professors
-                    .filter { it.userId != user?.userId }
-                    .forEach { professor ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = selectedPanelists.contains(professor.userId),
-                                onCheckedChange = { checked ->
-                                    if (checked) {
-                                        if (selectedPanelists.size < 2) {
-                                            selectedPanelists.add(professor.userId)
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
+                    professors
+                        .filter { it.userId != user?.userId }
+                        .forEach { professor ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(
+                                    checked = selectedPanelists.contains(professor.userId),
+                                    onCheckedChange = { checked ->
+                                        if (checked) {
+                                            if (selectedPanelists.size < 2) {
+                                                selectedPanelists.add(professor.userId)
+                                            } else {
+                                                viewModel.setMessage("Only two panelists are allowed.")
+                                            }
                                         } else {
-                                            viewModel.setMessage("Only two panelists are allowed.")
+                                            selectedPanelists.remove(professor.userId)
                                         }
-                                    } else {
-                                        selectedPanelists.remove(professor.userId)
                                     }
-                                }
-                            )
-                            Text(professor.fullName)
+                                )
+                                Text(professor.fullName)
+                            }
                         }
-                    }
+                }
 
-                // ✅ Fixed: Properly mapped parameter lambda scope structure
                 AppButton(
                     text = if (schedule == null) "Create Schedule" else "Save Changes",
                     loading = loading,
                     buttonType = ButtonType.PRIMARY,
                     onClick = {
                         val validation = viewModel.validate(
-                            groupId,
-                            researchTitle,
-                            date,
-                            startTime,
-                            endTime,
-                            roomId,
-                            selectedPanelists
+                            groupId, researchTitle, date, startTime, endTime, roomId, selectedPanelists
                         )
-
                         if (validation != null) {
                             viewModel.setMessage(validation)
                         } else {

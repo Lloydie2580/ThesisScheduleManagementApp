@@ -4,14 +4,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import com.example.thesisschedulemanagementapp.ui.theme.Border
+import com.example.thesisschedulemanagementapp.ui.theme.SurfaceVariant
 
 @Composable
 fun AppTextField(
@@ -29,7 +32,7 @@ fun AppTextField(
     errorMessage: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
-    OutlinedTextField(
+    TextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
@@ -38,16 +41,9 @@ fun AppTextField(
         readOnly = readOnly,
         isError = isError,
         keyboardOptions = keyboardOptions,
-        label = {
-            Text(label)
-        },
+        label = { Text(label) },
         leadingIcon = leadingIcon?.let {
-            {
-                Icon(
-                    imageVector = it,
-                    contentDescription = null
-                )
-            }
+            { Icon(imageVector = it, contentDescription = null) }
         },
         trailingIcon = trailingIcon,
         supportingText = if (isError && errorMessage != null) {
@@ -58,15 +54,16 @@ fun AppTextField(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-        } else {
-            null
-        },
-        visualTransformation = if (isPassword) {
-            PasswordVisualTransformation()
-        } else {
-            VisualTransformation.None
-        },
+        } else null,
+        visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
         shape = MaterialTheme.shapes.medium,
-        colors = OutlinedTextFieldDefaults.colors()
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = SurfaceVariant,
+            unfocusedContainerColor = SurfaceVariant,
+            disabledContainerColor = SurfaceVariant,
+            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+            disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+        )
     )
 }

@@ -1,12 +1,8 @@
 package com.example.thesisschedulemanagementapp.ui.screens.professor
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -14,7 +10,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
-
 import com.example.thesisschedulemanagementapp.data.model.User
 import com.example.thesisschedulemanagementapp.ui.components.cards.GroupCard
 import com.example.thesisschedulemanagementapp.ui.components.cards.ScheduleCard
@@ -25,10 +20,8 @@ import com.example.thesisschedulemanagementapp.ui.components.feedback.LoadingVie
 import com.example.thesisschedulemanagementapp.ui.components.headers.DashboardHeader
 import com.example.thesisschedulemanagementapp.ui.components.layout.ScreenScaffold
 import com.example.thesisschedulemanagementapp.ui.models.ButtonType
-import com.example.thesisschedulemanagementapp.ui.theme.Dimens
 import com.example.thesisschedulemanagementapp.ui.theme.ThesisScheduleManagementTheme
 import com.example.thesisschedulemanagementapp.viewmodel.ProfessorDashboardViewModel
-
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
@@ -45,19 +38,17 @@ fun ProfessorDashboardScreen(
     val groups by viewModel.groups.collectAsState()
 
     LaunchedEffect(user?.userId) {
-        user?.let {
-            viewModel.load(it.userId)
-        }
+        user?.let { viewModel.load(it.userId) }
     }
 
     ScreenScaffold(snackbarHostState) {
+
         DashboardHeader(
             title = "Professor Dashboard",
             user = user,
-            onLogout = onLogout
+            onLogout = onLogout,
+            onNotifications = onOpenNotifications
         )
-
-        Spacer(modifier = androidx.compose.ui.Modifier.height(Dimens.SpaceM))
 
         AppButton(
             text = "Create Defense Schedule",
@@ -73,21 +64,10 @@ fun ProfessorDashboardScreen(
             onClick = onOpenSchedules
         )
 
-        AppButton(
-            text = "Notifications",
-            icon = Icons.Default.Notifications,
-            buttonType = ButtonType.OUTLINED,
-            onClick = onOpenNotifications
-        )
-
-        Spacer(modifier = androidx.compose.ui.Modifier.height(Dimens.SpaceL))
-
         SectionHeader(
             title = "Advisee Groups",
             subtitle = "Student groups assigned under your supervision"
         )
-
-        Spacer(modifier = androidx.compose.ui.Modifier.height(Dimens.SpaceS))
 
         if (groups.data.isNullOrEmpty()) {
             EmptyState(
@@ -95,30 +75,20 @@ fun ProfessorDashboardScreen(
                 message = "No thesis groups are currently assigned to you."
             )
         } else {
-            groups.data?.take(4)?.forEach {
-                GroupCard(it)
-            }
+            groups.data?.take(4)?.forEach { GroupCard(it) }
         }
-
-        Spacer(modifier = androidx.compose.ui.Modifier.height(Dimens.SpaceL))
 
         SectionHeader(
             title = "Assigned Schedules",
             subtitle = "Upcoming thesis defense schedules"
         )
 
-        Spacer(modifier = androidx.compose.ui.Modifier.height(Dimens.SpaceS))
-
         when {
-            schedules.loading -> {
-                LoadingView(message = "Loading schedules...")
-            }
-            schedules.data.isNullOrEmpty() -> {
-                EmptyState(
-                    title = "No Schedules",
-                    message = "Create a defense schedule to get started."
-                )
-            }
+            schedules.loading -> LoadingView(message = "Loading schedules...")
+            schedules.data.isNullOrEmpty() -> EmptyState(
+                title = "No Schedules",
+                message = "Create a defense schedule to get started."
+            )
             else -> {
                 schedules.data?.take(3)?.forEach { schedule ->
                     ScheduleCard(
@@ -135,10 +105,7 @@ fun ProfessorDashboardScreen(
     }
 }
 
-@Preview(
-    showBackground = true,
-    widthDp = 390
-)
+@Preview(showBackground = true, widthDp = 390)
 @Composable
 private fun ProfessorDashboardScreenPreview() {
     ThesisScheduleManagementTheme {

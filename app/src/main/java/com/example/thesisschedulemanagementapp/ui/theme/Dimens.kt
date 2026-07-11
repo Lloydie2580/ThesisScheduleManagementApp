@@ -8,6 +8,7 @@ object Dimens {
     val SpaceXS = 4.dp
     val SpaceS = 8.dp
     val SpaceM = 16.dp
+    val SpaceML = 20.dp
     val SpaceL = 24.dp
     val SpaceXL = 32.dp
     val SpaceXXL = 40.dp

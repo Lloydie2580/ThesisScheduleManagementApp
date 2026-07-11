@@ -17,6 +17,20 @@ private val Inter = FontFamily(
 
 val AppTypography = Typography(
 
+    displaySmall = TextStyle(
+        fontFamily = Inter,
+        fontWeight = FontWeight.Bold,
+        fontSize = 34.sp,
+        lineHeight = 40.sp
+    ),
+
+    displayMedium = TextStyle(
+        fontFamily = Inter,
+        fontWeight = FontWeight.Bold,
+        fontSize = 38.sp,
+        lineHeight = 44.sp
+    ),
+
     headlineLarge = TextStyle(
         fontFamily = Inter,
         fontWeight = FontWeight.Bold,
