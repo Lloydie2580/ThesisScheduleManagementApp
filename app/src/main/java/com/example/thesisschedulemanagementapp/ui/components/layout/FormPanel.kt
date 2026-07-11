@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import com.example.thesisschedulemanagementapp.ui.components.common.AppCard
+import com.example.thesisschedulemanagementapp.ui.theme.Dimens
 
 @Composable
 fun FormPanel(
@@ -17,12 +17,37 @@ fun FormPanel(
     subtitle: String,
     content: @Composable () -> Unit
 ) {
-    Spacer(modifier = Modifier.height(32.dp))
-    Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-    Text(subtitle, style = MaterialTheme.typography.bodyMedium)
-    Spacer(modifier = Modifier.height(8.dp))
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        content = { content() }
+
+    Spacer(
+        modifier = androidx.compose.ui.Modifier.height(Dimens.SpaceXL)
     )
+
+    AppCard {
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)
+        ) {
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(
+                modifier = androidx.compose.ui.Modifier.height(Dimens.SpaceS)
+            )
+
+            content()
+
+        }
+
+    }
+
 }

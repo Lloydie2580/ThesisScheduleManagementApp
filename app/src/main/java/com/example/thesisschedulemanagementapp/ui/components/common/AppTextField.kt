@@ -1,6 +1,7 @@
 package com.example.thesisschedulemanagementapp.ui.components.common
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -25,7 +26,8 @@ fun AppTextField(
     isPassword: Boolean = false,
     readOnly: Boolean = false,
     isError: Boolean = false,
-    errorMessage: String? = null
+    errorMessage: String? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     OutlinedTextField(
         value = value,
@@ -35,6 +37,7 @@ fun AppTextField(
         enabled = enabled,
         readOnly = readOnly,
         isError = isError,
+        keyboardOptions = keyboardOptions,
         label = {
             Text(label)
         },

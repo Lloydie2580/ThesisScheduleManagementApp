@@ -11,36 +11,86 @@ import com.example.thesisschedulemanagementapp.ui.screens.shared.ScheduleFormScr
 import com.example.thesisschedulemanagementapp.ui.theme.ThesisScheduleManagementTheme
 import com.example.thesisschedulemanagementapp.viewmodel.ScheduleManagementViewModel
 
+
 @Composable
 fun UpdateScheduleScreen(
+
     snackbarHostState: SnackbarHostState,
+
     user: User?,
+
     schedule: DefenseSchedule?,
+
     viewModel: ScheduleManagementViewModel,
+
     onBack: () -> Unit
+
 ) {
-    LaunchedEffect(user?.userId) { user?.let { viewModel.loadOptions(it.userId) } }
+
+
+    LaunchedEffect(user?.userId) {
+
+        user?.let {
+
+            viewModel.loadOptions(
+                it.userId
+            )
+
+        }
+
+    }
+
+
+
     ScheduleFormScreen(
+
         title = "Update Defense Schedule",
+
         snackbarHostState = snackbarHostState,
+
         user = user,
+
         viewModel = viewModel,
+
         schedule = schedule,
+
         onSubmit = viewModel::update,
+
         onBack = onBack
+
     )
+
 }
 
-@Preview(showBackground = true, widthDp = 390)
+
+
+@Preview(
+    showBackground = true,
+    widthDp = 390
+)
 @Composable
 private fun UpdateScheduleScreenPreview() {
+
     ThesisScheduleManagementTheme {
+
         UpdateScheduleScreen(
-            snackbarHostState = remember { SnackbarHostState() },
+
+            snackbarHostState =
+                remember {
+                    SnackbarHostState()
+                },
+
             user = null,
+
             schedule = null,
-            viewModel = ScheduleManagementViewModel(),
+
+            viewModel =
+                ScheduleManagementViewModel(),
+
             onBack = {}
+
         )
+
     }
+
 }

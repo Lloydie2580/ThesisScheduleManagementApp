@@ -2,9 +2,9 @@ package com.example.thesisschedulemanagementapp.ui.components.feedback
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.EventBusy
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -12,45 +12,45 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import com.example.thesisschedulemanagementapp.ui.components.common.AppCard
+import com.example.thesisschedulemanagementapp.ui.theme.Dimens
 
 @Composable
 fun EmptyState(
-
     title: String,
-
-    subtitle: String,
-
-    icon: ImageVector = Icons.Outlined.EventBusy
-
+    message: String,
+    modifier: Modifier = Modifier,
+    icon: ImageVector = Icons.Default.Info
 ) {
 
-    Column(
-
-        modifier = Modifier.fillMaxSize(),
-
-        horizontalAlignment = Alignment.CenterHorizontally,
-
-        verticalArrangement = Arrangement.Center
-
+    AppCard(
+        modifier = modifier.fillMaxWidth()
     ) {
 
-        Icon(
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)
+        ) {
 
-            imageVector = icon,
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
 
-            contentDescription = null
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
 
-        )
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium
+            )
 
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge
-        )
-
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium
-        )
+        }
 
     }
 

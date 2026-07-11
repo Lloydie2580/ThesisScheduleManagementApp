@@ -9,15 +9,21 @@ import com.example.thesisschedulemanagementapp.data.model.User
 import com.example.thesisschedulemanagementapp.ui.screens.shared.ScheduleFormScreen
 import com.example.thesisschedulemanagementapp.ui.theme.ThesisScheduleManagementTheme
 import com.example.thesisschedulemanagementapp.viewmodel.ScheduleManagementViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun CreateScheduleScreen(
     snackbarHostState: SnackbarHostState,
     user: User?,
-    viewModel: ScheduleManagementViewModel,
+    viewModel: ScheduleManagementViewModel = viewModel(),
     onBack: () -> Unit
 ) {
-    LaunchedEffect(user?.userId) { user?.let { viewModel.loadOptions(it.userId) } }
+    LaunchedEffect(user?.userId) {
+        user?.let {
+            viewModel.loadOptions(it.userId)
+        }
+    }
+
     ScheduleFormScreen(
         title = "Create Defense Schedule",
         snackbarHostState = snackbarHostState,
@@ -29,14 +35,16 @@ fun CreateScheduleScreen(
     )
 }
 
-@Preview(showBackground = true, widthDp = 390)
+@Preview(
+    showBackground = true,
+    widthDp = 390
+)
 @Composable
 private fun CreateScheduleScreenPreview() {
     ThesisScheduleManagementTheme {
         CreateScheduleScreen(
             snackbarHostState = remember { SnackbarHostState() },
             user = null,
-            viewModel = ScheduleManagementViewModel(),
             onBack = {}
         )
     }
