@@ -1,6 +1,11 @@
 package com.example.thesisschedulemanagementapp.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -21,20 +26,36 @@ fun StudentDashboardScreen(
     user: User?,
     viewModel: StudentDashboardViewModel,
     onOpenSchedule: () -> Unit,
+    onRequestSchedule: () -> Unit,
     onOpenNotifications: () -> Unit,
     onLogout: () -> Unit
 ) {
     val scheduleState by viewModel.schedule.collectAsState()
     val notificationState by viewModel.notifications.collectAsState()
+    val groupState by viewModel.studentGroup.collectAsState()
+    
     LaunchedEffect(user?.userId) { user?.let { viewModel.load(it.userId) } }
+    
     ScreenScaffold(snackbarHostState) {
         DashboardHeader("Student Dashboard", user, onLogout)
         ActionRow(
             "View Schedule" to onOpenSchedule,
             "Notifications" to onOpenNotifications
         )
-        if (scheduleState.loading) CircularProgressIndicator()
-        scheduleState.data?.let { ScheduleCard(it, canManage = false) }
+
+        HorizontalScrollSection("My Schedule", onAction = onRequestSchedule, actionLabel = "Request Schedule") {
+            if (scheduleState.loading) CircularProgressIndicator()
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 0.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    scheduleState.data?.let { ScheduleCard(it, canManage = false, currentUserId = user?.userId) }
+                        ?: Text("No defense schedule has been assigned yet.", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
+
         Text("Recent Updates", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         NotificationList(notificationState.data.orEmpty().take(3))
     }
@@ -49,6 +70,7 @@ private fun StudentDashboardScreenPreview() {
             user = null,
             viewModel = StudentDashboardViewModel(),
             onOpenSchedule = {},
+            onRequestSchedule = {},
             onOpenNotifications = {},
             onLogout = {}
         )

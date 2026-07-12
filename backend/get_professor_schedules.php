@@ -7,7 +7,7 @@ if ($professor_id === "") send_response(false, "professor_id is required.");
 
 $stmt = $pdo->prepare("
     SELECT DISTINCT ds.schedule_id, ds.group_id, sg.group_code, sg.research_title, ds.adviser_id, adviser.full_name AS adviser_name,
-           ds.room_id, r.room_name, ds.defense_date, ds.start_time, ds.end_time, ds.status
+           ds.room_id, r.room_name, ds.defense_date, ds.start_time, ds.end_time, ds.status, ds.adviser_approved
     FROM defense_schedules ds
     JOIN student_groups sg ON ds.group_id = sg.group_id
     JOIN users adviser ON ds.adviser_id = adviser.user_id

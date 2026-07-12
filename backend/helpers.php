@@ -1,4 +1,5 @@
 <?php
+
 function read_json_input() {
     $raw = file_get_contents("php://input");
     $data = json_decode($raw, true);
@@ -6,6 +7,7 @@ function read_json_input() {
 }
 
 function send_response($success, $message, $data = null) {
+    if (ob_get_length()) ob_clean();
     $response = [
         "success" => $success,
         "message" => $message
@@ -54,15 +56,35 @@ function format_time_output($value) {
 }
 
 function get_schedule_panelists($pdo, $schedule_id) {
-    $stmt = $pdo->prepare("
-        SELECT u.user_id, u.full_name, u.email
-        FROM schedule_panelists sp
-        JOIN users u ON sp.professor_id = u.user_id
-        WHERE sp.schedule_id = ?
-        ORDER BY u.full_name
-    ");
-    $stmt->execute([$schedule_id]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $pdo->prepare("
+            SELECT u.user_id, u.full_name, u.email, sp.is_approved
+            FROM schedule_panelists sp
+            JOIN users u ON sp.professor_id = u.user_id
+            WHERE sp.schedule_id = ?
+            ORDER BY u.full_name
+        ");
+        $stmt->execute([$schedule_id]);
+        $panelists = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($panelists as &$p) {
+            $p["is_approved"] = (bool)($p["is_approved"] ?? 0);
+        }
+        return $panelists;
+    } catch (PDOException $e) {
+        $stmt = $pdo->prepare("
+            SELECT u.user_id, u.full_name, u.email
+            FROM schedule_panelists sp
+            JOIN users u ON sp.professor_id = u.user_id
+            WHERE sp.schedule_id = ?
+            ORDER BY u.full_name
+        ");
+        $stmt->execute([$schedule_id]);
+        $panelists = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($panelists as &$p) {
+            $p["is_approved"] = false;
+        }
+        return $panelists;
+    }
 }
 
 function format_schedule($pdo, $row) {
@@ -70,11 +92,31 @@ function format_schedule($pdo, $row) {
     $row["group_id"] = (int)$row["group_id"];
     $row["adviser_id"] = (int)$row["adviser_id"];
     $row["room_id"] = (int)$row["room_id"];
+    $row["adviser_approved"] = (bool)($row["adviser_approved"] ?? 0);
     $row["defense_date"] = format_date_output($row["defense_date"]);
     $row["start_time"] = format_time_output($row["start_time"]);
     $row["end_time"] = format_time_output($row["end_time"]);
     $row["panelists"] = get_schedule_panelists($pdo, $row["schedule_id"]);
     return $row;
+}
+
+function check_schedule_completion($pdo, $schedule_id) {
+    $stmt = $pdo->prepare("SELECT adviser_approved FROM defense_schedules WHERE schedule_id = ?");
+    $stmt->execute([$schedule_id]);
+    $adviser_approved = (bool)$stmt->fetchColumn();
+
+    if (!$adviser_approved) return false;
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM schedule_panelists WHERE schedule_id = ? AND is_approved = 0");
+    $stmt->execute([$schedule_id]);
+    $pending_panelists = (int)$stmt->fetchColumn();
+
+    if ($pending_panelists === 0) {
+        $stmt = $pdo->prepare("UPDATE defense_schedules SET status = 'Scheduled' WHERE schedule_id = ?");
+        $stmt->execute([$schedule_id]);
+        return true;
+    }
+    return false;
 }
 
 function schedule_conflict_message($pdo, $group_id, $adviser_id, $room_id, $date, $start, $end, $panelist_ids, $exclude_schedule_id = null) {
@@ -156,4 +198,3 @@ function notify_schedule_users($pdo, $schedule_id, $title, $message) {
         notify_user($pdo, $panelist["professor_id"], $title, $message);
     }
 }
-?>

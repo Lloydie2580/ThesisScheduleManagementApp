@@ -26,6 +26,15 @@ class ScheduleRepository {
     suspend fun complete(scheduleId: Int, professorId: Int): AppMessage =
         send("complete_schedule.php", mapOf("schedule_id" to scheduleId, "professor_id" to professorId))
 
+    suspend fun approve(scheduleId: Int, professorId: Int, professorName: String): AppMessage =
+        send("approve_schedule.php", mapOf("schedule_id" to scheduleId, "professor_id" to professorId, "professor_name" to professorName))
+
+    suspend fun cancelApproval(scheduleId: Int, professorId: Int, professorName: String): AppMessage =
+        send("cancel_approval.php", mapOf("schedule_id" to scheduleId, "professor_id" to professorId, "professor_name" to professorName))
+
+    suspend fun reject(scheduleId: Int, professorId: Int): AppMessage =
+        send("reject_schedule.php", mapOf("schedule_id" to scheduleId, "professor_id" to professorId))
+
     suspend fun delete(scheduleId: Int, professorId: Int): AppMessage =
         send("delete_schedule.php", mapOf("schedule_id" to scheduleId, "professor_id" to professorId))
 

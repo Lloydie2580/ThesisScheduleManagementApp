@@ -25,7 +25,7 @@ fun StudentScheduleScreen(
     ScreenScaffold(snackbarHostState) {
         BackHeader("My Defense Schedule", onBack)
         if (scheduleState.loading) CircularProgressIndicator()
-        scheduleState.data?.let { ScheduleCard(it, canManage = false) }
+        scheduleState.data?.let { ScheduleCard(it, canManage = false, currentUserId = user?.userId) }
             ?: Text("No defense schedule has been assigned yet.")
     }
 }

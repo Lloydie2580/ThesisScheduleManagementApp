@@ -58,10 +58,14 @@ fun ProfessorScheduleListScreen(
                     ScheduleCard(
                         schedule = schedule,
                         canManage = schedule.adviserId == user?.userId,
+                        currentUserId = user?.userId,
                         onEdit = { onEdit(schedule) },
                         onCancel = { user?.let { scheduleViewModel.cancel(schedule.scheduleId, it.userId) } },
                         onComplete = { user?.let { scheduleViewModel.complete(schedule.scheduleId, it.userId) } },
-                        onDelete = { scheduleToDelete = schedule }
+                        onDelete = { scheduleToDelete = schedule },
+                        onApprove = { user?.let { scheduleViewModel.approve(schedule.scheduleId, it.userId, it.fullName ?: "Professor") } },
+                        onRetractApproval = { user?.let { scheduleViewModel.cancelApproval(schedule.scheduleId, it.userId, it.fullName ?: "Professor") } },
+                        onReject = { user?.let { scheduleViewModel.reject(schedule.scheduleId, it.userId) } }
                     )
                 }
             }

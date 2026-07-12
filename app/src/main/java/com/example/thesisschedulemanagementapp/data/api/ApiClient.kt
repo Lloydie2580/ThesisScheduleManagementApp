@@ -19,7 +19,7 @@ object ApiClient {
     const val EMULATOR_BASE_URL = "http://10.0.2.2/thesis_schedule_api/"
     const val LAN_BASE_URL_EXAMPLE = "http://192.168.1.44/thesis_schedule_api/"
 
-    var baseUrl: String = LAN_BASE_URL_EXAMPLE
+    var baseUrl: String = EMULATOR_BASE_URL
         private set
 
     @PublishedApi

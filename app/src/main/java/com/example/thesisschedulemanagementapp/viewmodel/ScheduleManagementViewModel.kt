@@ -42,13 +42,35 @@ class ScheduleManagementViewModel : ViewModel() {
 
     fun loadOptions(adviserId: Int) {
         viewModelScope.launch {
-            groupRepository.getGroups(adviserId).onSuccess { _groups.value = it }
-            professorRepository.getProfessors().onSuccess { _professors.value = it }
+            groupRepository.getGroups(adviserId).fold(
+                onSuccess = { _groups.value = it },
+                onFailure = { setMessage("Couldn't load groups: ${it.message ?: "unknown error"}") }
+            )
+            professorRepository.getProfessors().fold(
+                onSuccess = { _professors.value = it },
+                onFailure = { setMessage("Couldn't load professors: ${it.message ?: "unknown error"}") }
+            )
+        }
+    }
+
+    fun loadStudentOptions(studentId: Int) {
+        viewModelScope.launch {
+            groupRepository.getStudentGroup(studentId).fold(
+                onSuccess = { group -> _groups.value = group?.let { listOf(it) } ?: emptyList() },
+                onFailure = { setMessage("Couldn't load your group: ${it.message ?: "unknown error"}") }
+            )
+            professorRepository.getProfessors().fold(
+                onSuccess = { _professors.value = it },
+                onFailure = { setMessage("Couldn't load professors: ${it.message ?: "unknown error"}") }
+            )
         }
     }
 
     fun create(request: ScheduleRequest) = submit { scheduleRepository.create(request) }
     fun update(request: ScheduleRequest) = submit { scheduleRepository.update(request) }
+    fun approve(scheduleId: Int, professorId: Int, professorName: String) = submit { scheduleRepository.approve(scheduleId, professorId, professorName) }
+    fun cancelApproval(scheduleId: Int, professorId: Int, professorName: String) = submit { scheduleRepository.cancelApproval(scheduleId, professorId, professorName) }
+    fun reject(scheduleId: Int, professorId: Int) = submit { scheduleRepository.reject(scheduleId, professorId) }
     fun cancel(scheduleId: Int, professorId: Int) = submit { scheduleRepository.cancel(scheduleId, professorId) }
     fun complete(scheduleId: Int, professorId: Int) = submit { scheduleRepository.complete(scheduleId, professorId) }
     fun delete(scheduleId: Int, professorId: Int) = submit { scheduleRepository.delete(scheduleId, professorId) }

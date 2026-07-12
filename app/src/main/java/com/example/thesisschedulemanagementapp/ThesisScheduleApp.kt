@@ -1,9 +1,16 @@
 package com.example.thesisschedulemanagementapp
 
-import android.app.Application
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -15,6 +22,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
 import com.example.thesisschedulemanagementapp.data.model.User
+import com.example.thesisschedulemanagementapp.ui.screens.CreateGroupScreen
 import com.example.thesisschedulemanagementapp.ui.screens.CreateScheduleScreen
 import com.example.thesisschedulemanagementapp.ui.screens.LoginScreen
 import com.example.thesisschedulemanagementapp.ui.screens.NotificationsScreen
@@ -31,39 +39,48 @@ import com.example.thesisschedulemanagementapp.viewmodel.StudentDashboardViewMod
 
 private enum class AppRoute {
     Login, Signup, StudentDashboard, ProfessorDashboard, StudentSchedule, ProfessorSchedules,
-    CreateSchedule, UpdateSchedule, Notifications
+    CreateSchedule, UpdateSchedule, Notifications, CreateGroup
 }
 
 @Composable
 fun ThesisScheduleApp() {
     val context = LocalContext.current
-    val activity = context as ComponentActivity
     val authViewModel = rememberViewModel<AuthViewModel> {
-        AuthViewModel(context.applicationContext as Application)
+        AuthViewModel(context.applicationContext as android.app.Application)
     }
     val studentViewModel = rememberViewModel<StudentDashboardViewModel> { StudentDashboardViewModel() }
-    val professorViewModel = rememberViewModel<ProfessorDashboardViewModel> { ProfessorDashboardViewModel() }
+    val professorViewModel = rememberViewModel<ProfessorDashboardViewModel> { 
+        ProfessorDashboardViewModel().apply { initRepositories(context.applicationContext) }
+    }
     val scheduleViewModel = rememberViewModel<ScheduleManagementViewModel> { ScheduleManagementViewModel() }
 
     val authState by authViewModel.state.collectAsState()
-    var route by remember {
-        mutableStateOf(
-            when (authState.data?.role?.lowercase()) {
+    
+    // Calculate initial route based on existing session data
+    val initialRoute = remember(authState.data) {
+        when (authState.data?.role?.lowercase()) {
+            "student" -> AppRoute.StudentDashboard
+            "professor" -> AppRoute.ProfessorDashboard
+            else -> AppRoute.Login
+        }
+    }
+    
+    var route by remember { mutableStateOf(initialRoute) }
+    
+    // Update route when auth state changes (e.g. login/logout)
+    LaunchedEffect(authState.data?.userId, authState.success) {
+        if (authState.success || authState.data == null) {
+            route = when (authState.data?.role?.lowercase()) {
                 "student" -> AppRoute.StudentDashboard
                 "professor" -> AppRoute.ProfessorDashboard
                 else -> AppRoute.Login
             }
-        )
+        }
     }
+
     var selectedSchedule by remember { mutableStateOf<DefenseSchedule?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val user: User? = authState.data
-
-    LaunchedEffect(authState.data?.userId, authState.success) {
-        authState.data?.let {
-            route = if (it.role.equals("student", true)) AppRoute.StudentDashboard else AppRoute.ProfessorDashboard
-        }
-    }
 
     LaunchedEffect(authState.message) {
         authState.message?.let {
@@ -72,97 +89,129 @@ fun ThesisScheduleApp() {
         }
     }
 
-    when (route) {
-        AppRoute.Login -> LoginScreen(
-            snackbarHostState = snackbarHostState,
-            state = authState,
-            onLogin = authViewModel::login,
-            onSignUp = { route = AppRoute.Signup }
-        )
-        AppRoute.Signup -> SignUpScreen(
-            snackbarHostState = snackbarHostState,
-            state = authState,
-            onSignUp = authViewModel::signup,
-            onBack = { route = AppRoute.Login }
-        )
-        AppRoute.StudentDashboard -> StudentDashboardScreen(
-            snackbarHostState = snackbarHostState,
-            user = user,
-            viewModel = studentViewModel,
-            onOpenSchedule = { route = AppRoute.StudentSchedule },
-            onOpenNotifications = { route = AppRoute.Notifications },
-            onLogout = {
-                authViewModel.logout()
-                route = AppRoute.Login
-            }
-        )
-        AppRoute.StudentSchedule -> StudentScheduleScreen(
-            snackbarHostState = snackbarHostState,
-            user = user,
-            viewModel = studentViewModel,
-            onBack = { route = AppRoute.StudentDashboard }
-        )
-        AppRoute.ProfessorDashboard -> ProfessorDashboardScreen(
-            snackbarHostState = snackbarHostState,
-            user = user,
-            viewModel = professorViewModel,
-            onOpenSchedules = { route = AppRoute.ProfessorSchedules },
-            onCreateSchedule = { route = AppRoute.CreateSchedule },
-            onOpenNotifications = { route = AppRoute.Notifications },
-            onLogout = {
-                authViewModel.logout()
-                route = AppRoute.Login
-            }
-        )
-        AppRoute.ProfessorSchedules -> ProfessorScheduleListScreen(
-            snackbarHostState = snackbarHostState,
-            user = user,
-            viewModel = professorViewModel,
-            scheduleViewModel = scheduleViewModel,
-            onBack = { route = AppRoute.ProfessorDashboard },
-            onEdit = {
-                selectedSchedule = it
-                route = AppRoute.UpdateSchedule
-            }
-        )
-        AppRoute.CreateSchedule -> CreateScheduleScreen(
-            snackbarHostState = snackbarHostState,
-            user = user,
-            viewModel = scheduleViewModel,
-            onBack = {
-                user?.let { professorViewModel.refreshSchedules(it.userId) }
-                route = AppRoute.ProfessorDashboard
-            }
-        )
-        AppRoute.UpdateSchedule -> UpdateScheduleScreen(
-            snackbarHostState = snackbarHostState,
-            user = user,
-            schedule = selectedSchedule,
-            viewModel = scheduleViewModel,
-            onBack = {
-                user?.let { professorViewModel.refreshSchedules(it.userId) }
-                route = AppRoute.ProfessorSchedules
-            }
-        )
-        AppRoute.Notifications -> NotificationsScreen(
-            snackbarHostState = snackbarHostState,
-            user = user,
-            studentViewModel = studentViewModel,
-            professorViewModel = professorViewModel,
-            onBack = {
-                route = if (user?.role.equals("student", true)) AppRoute.StudentDashboard else AppRoute.ProfessorDashboard
-            }
-        )
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        when (route) {
+            AppRoute.Login -> LoginScreen(
+                snackbarHostState = snackbarHostState,
+                state = authState,
+                onLogin = authViewModel::login,
+                onSignUp = { route = AppRoute.Signup }
+            )
+            AppRoute.Signup -> SignUpScreen(
+                snackbarHostState = snackbarHostState,
+                state = authState,
+                onSignUp = authViewModel::signup,
+                onBack = { route = AppRoute.Login }
+            )
+            AppRoute.StudentDashboard -> StudentDashboardScreen(
+                snackbarHostState = snackbarHostState,
+                user = user,
+                viewModel = studentViewModel,
+                onOpenSchedule = { route = AppRoute.StudentSchedule },
+                onRequestSchedule = { route = AppRoute.CreateSchedule },
+                onOpenNotifications = { route = AppRoute.Notifications },
+                onLogout = {
+                    authViewModel.logout()
+                    route = AppRoute.Login
+                }
+            )
+            AppRoute.StudentSchedule -> StudentScheduleScreen(
+                snackbarHostState = snackbarHostState,
+                user = user,
+                viewModel = studentViewModel,
+                onBack = { route = AppRoute.StudentDashboard }
+            )
+            AppRoute.ProfessorDashboard -> ProfessorDashboardScreen(
+                snackbarHostState = snackbarHostState,
+                user = user,
+                viewModel = professorViewModel,
+                scheduleViewModel = scheduleViewModel,
+                onOpenSchedules = { route = AppRoute.ProfessorSchedules },
+                onEditSchedule = {
+                    selectedSchedule = it
+                    route = AppRoute.UpdateSchedule
+                },
+                onCreateSchedule = { route = AppRoute.CreateSchedule },
+                onCreateGroup = { route = AppRoute.CreateGroup },
+                onOpenNotifications = { route = AppRoute.Notifications },
+                onLogout = {
+                    authViewModel.logout()
+                    route = AppRoute.Login
+                }
+            )
+            AppRoute.ProfessorSchedules -> ProfessorScheduleListScreen(
+                snackbarHostState = snackbarHostState,
+                user = user,
+                viewModel = professorViewModel,
+                scheduleViewModel = scheduleViewModel,
+                onBack = { route = AppRoute.ProfessorDashboard },
+                onEdit = {
+                    selectedSchedule = it
+                    route = AppRoute.UpdateSchedule
+                }
+            )
+            AppRoute.CreateSchedule -> CreateScheduleScreen(
+                snackbarHostState = snackbarHostState,
+                user = user,
+                viewModel = scheduleViewModel,
+                onBack = {
+                    if (user?.role.equals("student", true)) {
+                        user?.let { studentViewModel.load(it.userId) }
+                        route = AppRoute.StudentDashboard
+                    } else {
+                        user?.let { professorViewModel.refreshSchedules(it.userId) }
+                        route = AppRoute.ProfessorDashboard
+                    }
+                }
+            )
+            AppRoute.UpdateSchedule -> UpdateScheduleScreen(
+                snackbarHostState = snackbarHostState,
+                user = user,
+                schedule = selectedSchedule,
+                viewModel = scheduleViewModel,
+                onBack = {
+                    user?.let { professorViewModel.refreshSchedules(it.userId) }
+                    route = AppRoute.ProfessorSchedules
+                }
+            )
+            AppRoute.Notifications -> NotificationsScreen(
+                snackbarHostState = snackbarHostState,
+                user = user,
+                studentViewModel = studentViewModel,
+                professorViewModel = professorViewModel,
+                onBack = {
+                    route = if (user?.role.equals("student", true)) AppRoute.StudentDashboard else AppRoute.ProfessorDashboard
+                }
+            )
+            AppRoute.CreateGroup -> CreateGroupScreen(
+                snackbarHostState = snackbarHostState,
+                user = user,
+                viewModel = professorViewModel,
+                onBack = {
+                    user?.let { professorViewModel.load(it.userId) }
+                    route = AppRoute.ProfessorDashboard
+                }
+            )
+        }
     }
 }
 
 @Composable
 private inline fun <reified T : ViewModel> rememberViewModel(crossinline creator: () -> T): T {
-    val activity = LocalContext.current as ComponentActivity
-    return remember {
+    val context = LocalContext.current
+    return remember(context) {
+        val activity = context as? ComponentActivity 
+            ?: context.findActivity() 
+            ?: throw IllegalStateException("Context must be a ComponentActivity")
         ViewModelProvider(activity, object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <VM : ViewModel> create(modelClass: Class<VM>): VM = creator() as VM
         })[T::class.java]
     }
+}
+
+private fun Context.findActivity(): ComponentActivity? = when (this) {
+    is ComponentActivity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

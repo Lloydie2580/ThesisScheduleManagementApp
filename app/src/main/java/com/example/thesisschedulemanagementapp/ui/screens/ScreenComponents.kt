@@ -13,20 +13,32 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,12 +46,75 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
 import com.example.thesisschedulemanagementapp.data.model.NotificationItem
 import com.example.thesisschedulemanagementapp.data.model.StudentGroup
 import com.example.thesisschedulemanagementapp.data.model.User
+
+@Composable
+internal fun SectionHeader(
+    title: String,
+    onAction: (() -> Unit)? = null,
+    actionLabel: String? = null
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        if (onAction != null && actionLabel != null) {
+            TextButton(onClick = onAction) {
+                Text(actionLabel)
+            }
+        }
+    }
+}
+
+@Composable
+internal fun ApprovalBadge(name: String?, approved: Boolean) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 8.dp)) {
+        Icon(
+            imageVector = if (approved) Icons.Default.CheckCircle else Icons.Default.DateRange,
+            contentDescription = null,
+            modifier = Modifier.size(14.dp),
+            tint = if (approved) Color(0xFF4CAF50) else Color(0xFFFFA000)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = name.orEmpty(),
+            style = MaterialTheme.typography.bodySmall,
+            color = if (approved) Color(0xFF4CAF50) else Color(0xFF757575),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+internal fun HorizontalScrollSection(
+    title: String,
+    onAction: (() -> Unit)? = null,
+    actionLabel: String? = null,
+    content: @Composable () -> Unit
+) {
+    Column {
+        SectionHeader(title, onAction, actionLabel)
+        Box(contentAlignment = Alignment.CenterStart) {
+            content()
+        }
+    }
+}
 
 @Composable
 internal fun ScreenScaffold(snackbarHostState: SnackbarHostState, content: @Composable () -> Unit) {
@@ -117,26 +192,70 @@ internal fun ActionRow(vararg actions: Pair<String, () -> Unit>) {
 internal fun ScheduleCard(
     schedule: DefenseSchedule,
     canManage: Boolean,
+    currentUserId: Int? = null,
     onEdit: (() -> Unit)? = null,
     onCancel: (() -> Unit)? = null,
     onComplete: (() -> Unit)? = null,
-    onDelete: (() -> Unit)? = null
+    onDelete: (() -> Unit)? = null,
+    onApprove: (() -> Unit)? = null,
+    onRetractApproval: (() -> Unit)? = null,
+    onReject: (() -> Unit)? = null
 ) {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(2.dp)) {
+    val isAdviser = schedule.adviserId == currentUserId
+    val currentPanelist = schedule.panelists?.firstOrNull { it.userId == currentUserId }
+    val hasApproved = if (isAdviser) schedule.adviserApproved else currentPanelist?.isApproved == true
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(2.dp),
+        modifier = Modifier.width(340.dp) // Restored size
+    ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(schedule.researchTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Text("Group Code: ${schedule.groupCode}")
-            Text("${schedule.defenseDate} | ${schedule.startTime} - ${schedule.endTime}")
-            Text("Room: ${schedule.roomName}")
-            Text("Adviser: ${schedule.adviserName}")
-            Text("Panelists: ${schedule.panelists.joinToString { it.fullName }.ifBlank { "Not assigned" }}")
-            Text("Status: ${schedule.status}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
-            if (canManage) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+                Text(
+                    schedule.researchTitle.orEmpty(),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (canManage && onEdit != null) {
+                    IconButton(onClick = onEdit, modifier = Modifier.size(24.dp)) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    }
+                }
+            }
+            Text("Group Code: ${schedule.groupCode.orEmpty()}", style = MaterialTheme.typography.bodySmall)
+            Text("${schedule.defenseDate.orEmpty()} | ${schedule.startTime.orEmpty()} - ${schedule.endTime.orEmpty()}", style = MaterialTheme.typography.bodySmall)
+            Text("Room: ${schedule.roomName.orEmpty()}", style = MaterialTheme.typography.bodySmall)
+            
+            Text("Approvals:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            FlowRow {
+                ApprovalBadge(schedule.adviserName, schedule.adviserApproved)
+                schedule.panelists?.forEach { panelist ->
+                    ApprovalBadge(panelist.fullName, panelist.isApproved)
+                }
+            }
+            
+            Text("Status: ${schedule.status.orEmpty()}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall)
+            
+            if (canManage || onApprove != null || onReject != null || onRetractApproval != null) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    onEdit?.let { OutlinedButton(onClick = it) { Text("Edit") } }
-                    onCancel?.let { OutlinedButton(onClick = it) { Text("Cancel") } }
-                    onComplete?.let { Button(onClick = it) { Text("Complete") } }
-                    onDelete?.let { OutlinedButton(onClick = it) { Text("Delete") } }
+                    if (canManage) {
+                        onCancel?.let { OutlinedButton(onClick = it, contentPadding = ButtonDefaults.TextButtonContentPadding) { Text("Cancel Schedule", style = MaterialTheme.typography.labelSmall) } }
+                        onComplete?.let { Button(onClick = it, contentPadding = ButtonDefaults.TextButtonContentPadding) { Text("Complete", style = MaterialTheme.typography.labelSmall) } }
+                        onDelete?.let { OutlinedButton(onClick = it, contentPadding = ButtonDefaults.TextButtonContentPadding) { Text("Delete", style = MaterialTheme.typography.labelSmall) } }
+                    }
+                    
+                    if (schedule.status == "Pending" || schedule.status == "Scheduled") {
+                        if (hasApproved) {
+                            onRetractApproval?.let { OutlinedButton(onClick = it, contentPadding = ButtonDefaults.TextButtonContentPadding) { Text("Cancel Approval", style = MaterialTheme.typography.labelSmall) } }
+                        } else if (onApprove != null || onReject != null) {
+                            onApprove?.let { Button(onClick = it, contentPadding = ButtonDefaults.TextButtonContentPadding) { Text("Approve", style = MaterialTheme.typography.labelSmall) } }
+                            onReject?.let { OutlinedButton(onClick = it, contentPadding = ButtonDefaults.TextButtonContentPadding) { Text("Reject", style = MaterialTheme.typography.labelSmall) } }
+                        }
+                    }
                 }
             }
         }
@@ -145,12 +264,17 @@ internal fun ScheduleCard(
 
 @Composable
 internal fun GroupCard(group: StudentGroup) {
-    Card {
+    Card(
+        modifier = Modifier.width(300.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(group.groupCode, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Text(group.researchTitle)
-            Text("Adviser: ${group.adviserName ?: "Assigned adviser"}")
-            if (group.members.isNotEmpty()) Text("Members: ${group.members.joinToString { it.fullName }}")
+            Text(group.groupCode.orEmpty(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(group.researchTitle.orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("Adviser: ${group.adviserName ?: "Assigned adviser"}", style = MaterialTheme.typography.bodySmall)
+            if (!group.members.isNullOrEmpty()) {
+                Text("Members: ${group.members.joinToString { it.fullName.orEmpty() }}", style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
     }
 }

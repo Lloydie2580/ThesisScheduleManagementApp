@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
 import com.example.thesisschedulemanagementapp.data.model.NotificationItem
+import com.example.thesisschedulemanagementapp.data.model.StudentGroup
+import com.example.thesisschedulemanagementapp.data.repository.GroupRepository
 import com.example.thesisschedulemanagementapp.data.repository.NotificationRepository
 import com.example.thesisschedulemanagementapp.data.repository.ScheduleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +23,11 @@ class StudentDashboardViewModel : ViewModel() {
     private val _notifications = MutableStateFlow(UiState<List<NotificationItem>>())
     val notifications: StateFlow<UiState<List<NotificationItem>>> = _notifications.asStateFlow()
 
+    private val _studentGroup = MutableStateFlow(UiState<StudentGroup?>())
+    val studentGroup: StateFlow<UiState<StudentGroup?>> = _studentGroup.asStateFlow()
+
+    private val groupRepository = GroupRepository()
+
     fun load(studentId: Int) {
         viewModelScope.launch {
             _schedule.value = UiState(loading = true)
@@ -29,6 +36,17 @@ class StudentDashboardViewModel : ViewModel() {
                 onFailure = { _schedule.value = UiState(message = it.message, success = false) }
             )
             loadNotifications(studentId)
+            loadStudentGroup(studentId)
+        }
+    }
+
+    private fun loadStudentGroup(studentId: Int) {
+        viewModelScope.launch {
+            _studentGroup.value = UiState(loading = true)
+            groupRepository.getStudentGroup(studentId).fold(
+                onSuccess = { _studentGroup.value = UiState(data = it, success = true) },
+                onFailure = { _studentGroup.value = UiState(message = it.message, success = false) }
+            )
         }
     }
 

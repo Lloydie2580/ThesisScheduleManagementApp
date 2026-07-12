@@ -7,7 +7,7 @@ if ($student_id === "") send_response(false, "student_id is required.");
 
 $stmt = $pdo->prepare("
     SELECT ds.schedule_id, ds.group_id, sg.group_code, sg.research_title, ds.adviser_id, adviser.full_name AS adviser_name,
-           ds.room_id, r.room_name, ds.defense_date, ds.start_time, ds.end_time, ds.status
+           ds.room_id, r.room_name, ds.defense_date, ds.start_time, ds.end_time, ds.status, ds.adviser_approved
     FROM group_members gm
     JOIN student_groups sg ON gm.group_id = sg.group_id
     LEFT JOIN defense_schedules ds ON sg.group_id = ds.group_id
