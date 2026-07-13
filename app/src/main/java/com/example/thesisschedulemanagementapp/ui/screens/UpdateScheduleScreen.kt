@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
 import com.example.thesisschedulemanagementapp.data.model.User
+import com.example.thesisschedulemanagementapp.ui.screens.ScheduleFormScreen
 import com.example.thesisschedulemanagementapp.ui.theme.ThesisScheduleManagementTheme
 import com.example.thesisschedulemanagementapp.viewmodel.ScheduleManagementViewModel
 
@@ -18,7 +19,12 @@ fun UpdateScheduleScreen(
     viewModel: ScheduleManagementViewModel,
     onBack: () -> Unit
 ) {
-    LaunchedEffect(user?.userId) { user?.let { viewModel.loadOptions(it.userId) } }
+    LaunchedEffect(user?.userId) {
+        user?.let {
+            viewModel.loadOptions(it.userId)
+        }
+    }
+
     ScheduleFormScreen(
         title = "Update Defense Schedule",
         snackbarHostState = snackbarHostState,
@@ -30,9 +36,9 @@ fun UpdateScheduleScreen(
     )
 }
 
-@Preview(showBackground = true, widthDp = 390)
+@Preview(showBackground = true)
 @Composable
-private fun UpdateScheduleScreenPreview() {
+private fun UpdateSchedulePreview() {
     ThesisScheduleManagementTheme {
         UpdateScheduleScreen(
             snackbarHostState = remember { SnackbarHostState() },

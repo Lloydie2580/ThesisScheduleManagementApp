@@ -1,20 +1,10 @@
 package com.example.thesisschedulemanagementapp.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,14 +18,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
 import com.example.thesisschedulemanagementapp.data.model.ScheduleRequest
 import com.example.thesisschedulemanagementapp.data.model.User
+import com.example.thesisschedulemanagementapp.ui.components.common.AppButton
+import com.example.thesisschedulemanagementapp.ui.components.common.AppTextField
+import com.example.thesisschedulemanagementapp.ui.components.common.DatePickerField
+import com.example.thesisschedulemanagementapp.ui.components.common.TimePickerField
+import com.example.thesisschedulemanagementapp.ui.components.layout.FormPanel
+import com.example.thesisschedulemanagementapp.ui.components.layout.ScreenScaffold
+import com.example.thesisschedulemanagementapp.ui.components.headers.BackHeader
+import com.example.thesisschedulemanagementapp.ui.components.common.PickerField
+import com.example.thesisschedulemanagementapp.ui.theme.Dimens
+import com.example.thesisschedulemanagementapp.ui.components.models.ButtonType
 import com.example.thesisschedulemanagementapp.viewmodel.ScheduleManagementViewModel
 
 @Composable
-internal fun ScheduleFormScreen(
+fun ScheduleFormScreen(
     title: String,
     snackbarHostState: SnackbarHostState,
     user: User?,
@@ -92,24 +91,22 @@ internal fun ScheduleFormScreen(
         }
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
-        Box(
-            Modifier
-                .padding(padding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = 960.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                BackHeader(title, onBack)
+    ScreenScaffold(snackbarHostState) {
+        BackHeader(title, onBack)
 
-                PickerField("Group Code", groupId, groups, { it.groupId }, { it.groupCode.orEmpty() }) { selectedGroupId ->
+        FormPanel(
+            title = "Defense Details",
+            subtitle = "Fill in the schedule information below."
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
+
+                PickerField(
+                    label = "Group Code",
+                    selectedKey = groupId,
+                    items = groups,
+                    key = { it.groupId },
+                    text = { it.groupCode.orEmpty() }
+                ) { selectedGroupId ->
                     groupId = selectedGroupId
                     groups.firstOrNull { it.groupId == selectedGroupId }?.let { group ->
                         researchTitle = group.researchTitle.orEmpty()
@@ -119,94 +116,112 @@ internal fun ScheduleFormScreen(
                     }
                 }
 
-                OutlinedTextField(
+                AppTextField(
                     value = researchTitle,
                     onValueChange = { researchTitle = it },
-                    label = { Text("Research Title") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = "Research Title"
                 )
 
-                OutlinedTextField(
+                DatePickerField(
+                    label = "Defense Date",
                     value = date,
-                    onValueChange = { date = it },
-                    label = { Text("Date (MM/DD/YYYY)") },
-                    modifier = Modifier.fillMaxWidth()
+                    onValueChange = { date = it }
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
+                    TimePickerField(
+                        label = "Start Time",
                         value = startTime,
                         onValueChange = {
                             startTime = it
                             viewModel.calculateEndTime(it)?.let { calculatedEndTime -> endTime = calculatedEndTime }
                         },
-                        label = { Text("Start (H:MM AM/PM)") },
                         modifier = Modifier.weight(1f)
                     )
-                    OutlinedTextField(
+                    TimePickerField(
+                        label = "End Time",
                         value = endTime,
                         onValueChange = { endTime = it },
-                        label = { Text("End (H:MM AM/PM)") },
                         modifier = Modifier.weight(1f)
                     )
                 }
 
-                PickerField("Room", roomId, viewModel.rooms, { it.roomId }, { it.roomName }) { roomId = it }
+                PickerField(
+                    label = "Room",
+                    selectedKey = roomId,
+                    items = viewModel.rooms,
+                    key = { it.roomId },
+                    text = { it.roomName }
+                ) { roomId = it }
 
-                PickerField("Status", status, viewModel.statuses, { it }, { it }) { status = it }
+                PickerField(
+                    label = "Status",
+                    selectedKey = status,
+                    items = viewModel.statuses,
+                    key = { it },
+                    text = { it }
+                ) { status = it }
 
-                Text("Panelists", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = "Panelists",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
 
-                // Use the memoized list here
-                availableProfessors.forEach { professor ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = selectedPanelists.contains(professor.userId),
-                            onCheckedChange = { isChecked ->
-                                if (isChecked) {
-                                    if (selectedPanelists.size < 2) {
-                                        selectedPanelists.add(professor.userId)
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
+                    availableProfessors.forEach { professor ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = selectedPanelists.contains(professor.userId),
+                                onCheckedChange = { isChecked ->
+                                    if (isChecked) {
+                                        if (selectedPanelists.size < 2) {
+                                            selectedPanelists.add(professor.userId)
+                                        } else {
+                                            viewModel.setMessage("A maximum of 2 panelists can be selected.")
+                                        }
                                     } else {
-                                        viewModel.setMessage("A maximum of 2 panelists can be selected.")
+                                        selectedPanelists.remove(professor.userId)
                                     }
-                                } else {
-                                    selectedPanelists.remove(professor.userId)
                                 }
-                            }
-                        )
-                        Text(professor.fullName ?: "Unknown Professor")
-                    }
-                }
-
-                PrimaryLoadingButton(if (schedule == null) "Create Schedule" else "Save Changes", loading) {
-                    val currentUserId = user?.userId ?: 0
-
-                    // Directly use the state variables rather than creating redundant local copies
-                    val validation = viewModel.validate(
-                        groupId, researchTitle, date, startTime, endTime, roomId, selectedPanelists.toList()
-                    )
-
-                    if (validation != null) {
-                        viewModel.setMessage(validation)
-                    } else {
-                        onSubmit(
-                            ScheduleRequest(
-                                scheduleId = schedule?.scheduleId,
-                                groupId = groupId,
-                                researchTitle = researchTitle,
-                                defenseDate = date,
-                                startTime = startTime,
-                                endTime = endTime,
-                                roomId = roomId,
-                                adviserId = groupAdviserId,
-                                panelistIds = selectedPanelists.toList(),
-                                status = status,
-                                requesterId = currentUserId,
-                                requesterRole = user?.role
                             )
-                        )
+                            Text(professor.fullName ?: "Unknown Professor")
+                        }
                     }
                 }
+
+                AppButton(
+                    text = if (schedule == null) "Create Schedule" else "Save Changes",
+                    loading = loading,
+                    buttonType = ButtonType.PRIMARY,
+                    onClick = {
+                        val currentUserId = user?.userId ?: 0
+                        val validation = viewModel.validate(
+                            groupId, researchTitle, date, startTime, endTime, roomId, selectedPanelists.toList()
+                        )
+
+                        if (validation != null) {
+                            viewModel.setMessage(validation)
+                        } else {
+                            onSubmit(
+                                ScheduleRequest(
+                                    scheduleId = schedule?.scheduleId,
+                                    groupId = groupId,
+                                    researchTitle = researchTitle,
+                                    defenseDate = date,
+                                    startTime = startTime,
+                                    endTime = endTime,
+                                    roomId = roomId,
+                                    adviserId = groupAdviserId,
+                                    panelistIds = selectedPanelists.toList(),
+                                    status = status,
+                                    requesterId = currentUserId,
+                                    requesterRole = user?.role
+                                )
+                            )
+                        }
+                    }
+                )
             }
         }
     }

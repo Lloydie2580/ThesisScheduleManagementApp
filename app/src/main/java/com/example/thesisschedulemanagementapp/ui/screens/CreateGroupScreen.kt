@@ -1,20 +1,11 @@
 package com.example.thesisschedulemanagementapp.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,8 +19,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.example.thesisschedulemanagementapp.data.model.User
+import com.example.thesisschedulemanagementapp.ui.components.common.AppButton
+import com.example.thesisschedulemanagementapp.ui.components.common.AppTextField
+import com.example.thesisschedulemanagementapp.ui.components.layout.FormPanel
+import com.example.thesisschedulemanagementapp.ui.components.layout.ScreenScaffold
+import com.example.thesisschedulemanagementapp.ui.components.headers.BackHeader
+import com.example.thesisschedulemanagementapp.ui.theme.Dimens
+import com.example.thesisschedulemanagementapp.ui.components.models.ButtonType
 import com.example.thesisschedulemanagementapp.viewmodel.ProfessorDashboardViewModel
 
 @Composable
@@ -42,7 +39,7 @@ fun CreateGroupScreen(
     val students by viewModel.allStudents.collectAsState()
     val professors by viewModel.allProfessors.collectAsState()
     val message by viewModel.message.collectAsState()
-    
+
     var researchTitle by remember { mutableStateOf("") }
     var program by remember { mutableStateOf("") }
     val selectedMembers = remember { mutableStateListOf<Int>() }
@@ -60,75 +57,102 @@ fun CreateGroupScreen(
         }
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
-        Box(
-            Modifier
-                .padding(padding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
+    ScreenScaffold(snackbarHostState) {
+        BackHeader("Create Advisee Group", onBack)
+
+        FormPanel(
+            title = "Group Details",
+            subtitle = "Fill in the research title, program, and assign members/panelists."
         ) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = 960.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                BackHeader("Create Advisee Group", onBack)
-                OutlinedTextField(researchTitle, { researchTitle = it }, label = { Text("Thesis Title") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(program, { program = it }, label = { Text("Program (e.g., CS, IT)") }, modifier = Modifier.fillMaxWidth())
-                
-                Text("Select Members", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                students.forEach { student ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = selectedMembers.contains(student.userId),
-                            onCheckedChange = { if (it) selectedMembers.add(student.userId) else selectedMembers.remove(student.userId) }
-                        )
-                        Text(student.fullName ?: "Unknown Student")
-                    }
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
 
-                Text("Select Panelists", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                professors.filter { it.userId != user?.userId }.forEach { professor ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = selectedPanelists.contains(professor.userId),
-                            onCheckedChange = { 
-                                if (it) {
-                                    if (selectedPanelists.size < 2) selectedPanelists.add(professor.userId)
-                                } else {
-                                    selectedPanelists.remove(professor.userId)
+                AppTextField(
+                    value = researchTitle,
+                    onValueChange = { researchTitle = it },
+                    label = "Thesis Title"
+                )
+
+                AppTextField(
+                    value = program,
+                    onValueChange = { program = it },
+                    label = "Program (e.g., CS, IT)"
+                )
+
+                Text(
+                    text = "Select Members",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
+                    students.forEach { student ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = selectedMembers.contains(student.userId),
+                                onCheckedChange = { isChecked ->
+                                    if (isChecked) selectedMembers.add(student.userId) else selectedMembers.remove(student.userId)
                                 }
-                            }
-                        )
-                        Text(professor.fullName ?: "Unknown Professor")
+                            )
+                            Text(student.fullName ?: "Unknown Student")
+                        }
                     }
                 }
 
-                PrimaryLoadingButton("Create Group", loading) {
-                    if (researchTitle.isBlank() || program.isBlank() || selectedMembers.isEmpty() || selectedPanelists.isEmpty()) {
-                        viewModel.setMessage("Please complete all fields.")
-                    } else {
-                        loading = true
-                        viewModel.createGroup(
-                            researchTitle = researchTitle,
-                            adviserId = user?.userId ?: 0,
-                            memberIds = selectedMembers.toList(),
-                            panelistIds = selectedPanelists.toList(),
-                            program = program,
-                            onSuccess = {
-                                loading = false
-                                onBack() // This directs back to dashboard
-                            },
-                            onError = { error ->
-                                loading = false
-                                viewModel.setMessage(error)
-                            }
-                        )
+                Text(
+                    text = "Select Panelists",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
+                    professors.filter { it.userId != user?.userId }.forEach { professor ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = selectedPanelists.contains(professor.userId),
+                                onCheckedChange = { isChecked ->
+                                    if (isChecked) {
+                                        if (selectedPanelists.size < 2) {
+                                            selectedPanelists.add(professor.userId)
+                                        } else {
+                                            viewModel.setMessage("A maximum of 2 panelists can be selected.")
+                                        }
+                                    } else {
+                                        selectedPanelists.remove(professor.userId)
+                                    }
+                                }
+                            )
+                            Text(professor.fullName ?: "Unknown Professor")
+                        }
                     }
                 }
+
+                AppButton(
+                    text = "Create Group",
+                    loading = loading,
+                    buttonType = ButtonType.PRIMARY,
+                    onClick = {
+                        if (researchTitle.isBlank() || program.isBlank() || selectedMembers.isEmpty() || selectedPanelists.isEmpty()) {
+                            viewModel.setMessage("Please complete all fields.")
+                        } else {
+                            loading = true
+                            viewModel.createGroup(
+                                researchTitle = researchTitle,
+                                adviserId = user?.userId ?: 0,
+                                memberIds = selectedMembers.toList(),
+                                panelistIds = selectedPanelists.toList(),
+                                program = program,
+                                onSuccess = {
+                                    loading = false
+                                    onBack()
+                                },
+                                onError = { error ->
+                                    loading = false
+                                    viewModel.setMessage(error)
+                                }
+                            )
+                        }
+                    }
+                )
             }
         }
     }

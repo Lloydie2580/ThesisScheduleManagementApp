@@ -7,6 +7,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.thesisschedulemanagementapp.data.model.User
+import com.example.thesisschedulemanagementapp.ui.components.cards.NotificationList
+import com.example.thesisschedulemanagementapp.ui.components.feedback.EmptyState
+import com.example.thesisschedulemanagementapp.ui.components.feedback.LoadingView
+import com.example.thesisschedulemanagementapp.ui.components.headers.BackHeader
+import com.example.thesisschedulemanagementapp.ui.components.layout.ScreenScaffold
 import com.example.thesisschedulemanagementapp.ui.theme.ThesisScheduleManagementTheme
 import com.example.thesisschedulemanagementapp.viewmodel.ProfessorDashboardViewModel
 import com.example.thesisschedulemanagementapp.viewmodel.StudentDashboardViewModel
@@ -21,20 +26,46 @@ fun NotificationsScreen(
 ) {
     val studentNotifications by studentViewModel.notifications.collectAsState()
     val professorNotifications by professorViewModel.notifications.collectAsState()
-    val items = if (user?.role.equals("student", true)) {
-        studentNotifications.data.orEmpty()
-    } else {
-        professorNotifications.data.orEmpty()
-    }
+
+    val state =
+        if (user?.role.equals("student", true))
+            studentNotifications
+        else
+            professorNotifications
+
     ScreenScaffold(snackbarHostState) {
-        BackHeader("Notifications", onBack)
-        NotificationList(items)
+
+        BackHeader(
+            title = "Notifications",
+            onBack = onBack
+        )
+
+        when {
+            state.loading -> {
+                LoadingView(
+                    message = "Loading notifications..."
+                )
+            }
+
+            state.data.isNullOrEmpty() -> {
+                EmptyState(
+                    title = "No Notifications",
+                    message = "You're all caught up."
+                )
+            }
+
+            else -> {
+                NotificationList(
+                    items = state.data!!
+                )
+            }
+        }
     }
 }
 
-@Preview(showBackground = true, widthDp = 390)
+@Preview(showBackground = true)
 @Composable
-private fun NotificationsScreenPreview() {
+private fun NotificationsPreview() {
     ThesisScheduleManagementTheme {
         NotificationsScreen(
             snackbarHostState = remember { SnackbarHostState() },

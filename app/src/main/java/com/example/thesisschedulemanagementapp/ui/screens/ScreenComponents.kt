@@ -17,10 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
@@ -208,7 +205,7 @@ internal fun ScheduleCard(
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier.width(340.dp) // Restored size
+        modifier = Modifier.width(340.dp)
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
@@ -229,17 +226,17 @@ internal fun ScheduleCard(
             Text("Group Code: ${schedule.groupCode.orEmpty()}", style = MaterialTheme.typography.bodySmall)
             Text("${schedule.defenseDate.orEmpty()} | ${schedule.startTime.orEmpty()} - ${schedule.endTime.orEmpty()}", style = MaterialTheme.typography.bodySmall)
             Text("Room: ${schedule.roomName.orEmpty()}", style = MaterialTheme.typography.bodySmall)
-            
+
             Text("Approvals:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-            FlowRow {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 ApprovalBadge(schedule.adviserName, schedule.adviserApproved)
                 schedule.panelists?.forEach { panelist ->
                     ApprovalBadge(panelist.fullName, panelist.isApproved)
                 }
             }
-            
+
             Text("Status: ${schedule.status.orEmpty()}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall)
-            
+
             if (canManage || onApprove != null || onReject != null || onRetractApproval != null) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (canManage) {
@@ -247,7 +244,7 @@ internal fun ScheduleCard(
                         onComplete?.let { Button(onClick = it, contentPadding = ButtonDefaults.TextButtonContentPadding) { Text("Complete", style = MaterialTheme.typography.labelSmall) } }
                         onDelete?.let { OutlinedButton(onClick = it, contentPadding = ButtonDefaults.TextButtonContentPadding) { Text("Delete", style = MaterialTheme.typography.labelSmall) } }
                     }
-                    
+
                     if (schedule.status == "Pending" || schedule.status == "Scheduled") {
                         if (hasApproved) {
                             onRetractApproval?.let { OutlinedButton(onClick = it, contentPadding = ButtonDefaults.TextButtonContentPadding) { Text("Cancel Approval", style = MaterialTheme.typography.labelSmall) } }
@@ -282,14 +279,17 @@ internal fun GroupCard(group: StudentGroup) {
 @Composable
 internal fun NotificationList(items: List<NotificationItem>) {
     if (items.isEmpty()) {
-        Text("No notifications yet.")
+        Text("No notifications yet.", style = MaterialTheme.typography.bodyMedium)
         return
     }
     items.forEach { item ->
-        Card {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(2.dp)
+        ) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(item.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                Text(item.message)
+                Text(item.message, style = MaterialTheme.typography.bodyMedium)
                 Text(item.createdAt, style = MaterialTheme.typography.bodySmall)
             }
         }

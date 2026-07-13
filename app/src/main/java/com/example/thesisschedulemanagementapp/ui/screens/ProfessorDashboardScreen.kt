@@ -1,23 +1,22 @@
 package com.example.thesisschedulemanagementapp.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.ui.unit.dp
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
 import com.example.thesisschedulemanagementapp.data.model.User
+import com.example.thesisschedulemanagementapp.ui.components.cards.GroupCard
+import com.example.thesisschedulemanagementapp.ui.components.cards.ScheduleCard
+import com.example.thesisschedulemanagementapp.ui.components.common.AppButton
+import com.example.thesisschedulemanagementapp.ui.components.common.SectionHeader
+import com.example.thesisschedulemanagementapp.ui.components.feedback.EmptyState
+import com.example.thesisschedulemanagementapp.ui.components.feedback.LoadingView
+import com.example.thesisschedulemanagementapp.ui.components.headers.DashboardHeader
+import com.example.thesisschedulemanagementapp.ui.components.layout.ScreenScaffold
+import com.example.thesisschedulemanagementapp.ui.components.models.ButtonType
 import com.example.thesisschedulemanagementapp.ui.theme.ThesisScheduleManagementTheme
 import com.example.thesisschedulemanagementapp.viewmodel.ProfessorDashboardViewModel
 import com.example.thesisschedulemanagementapp.viewmodel.ScheduleManagementViewModel
@@ -39,47 +38,129 @@ fun ProfessorDashboardScreen(
     val groups by viewModel.groups.collectAsState()
     val message by scheduleViewModel.message.collectAsState()
 
-    LaunchedEffect(user?.userId) { user?.let { viewModel.load(it.userId) } }
-    
+    LaunchedEffect(user?.userId) {
+        user?.let { viewModel.load(it.userId) }
+    }
+
     LaunchedEffect(message) {
         message?.let {
             snackbarHostState.showSnackbar(it.message)
             scheduleViewModel.clearMessage()
-            user?.let { u -> viewModel.refreshSchedules(u.userId) }
+            user?.let { u ->
+                viewModel.refreshSchedules(u.userId)
+            }
         }
     }
 
     ScreenScaffold(snackbarHostState) {
-        DashboardHeader("Professor Dashboard", user, onLogout)
-        ActionRow(
-            "Schedules" to onOpenSchedules,
-            "Notifications" to onOpenNotifications
+
+        DashboardHeader(
+            title = "Professor Dashboard",
+            user = user,
+            onLogout = onLogout,
+            onNotifications = onOpenNotifications
         )
-        
-        HorizontalScrollSection("Advisee Groups", onAction = onCreateGroup, actionLabel = "Create Group") {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 0.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(groups.data.orEmpty()) { GroupCard(it) }
+
+        AppButton(
+            text = "Create Defense Schedule",
+            icon = Icons.Default.AddCircle,
+            buttonType = ButtonType.PRIMARY,
+            onClick = onCreateSchedule
+        )
+
+        AppButton(
+            text = "Manage Schedules",
+            icon = Icons.Default.CalendarMonth,
+            buttonType = ButtonType.OUTLINED,
+            onClick = onOpenSchedules
+        )
+
+        AppButton(
+            text = "Create Group",
+            buttonType = ButtonType.OUTLINED,
+            onClick = onCreateGroup
+        )
+
+        SectionHeader(
+            title = "Advisee Groups",
+            subtitle = "Student groups assigned under your supervision"
+        )
+
+        when {
+            groups.loading -> {
+                LoadingView("Loading groups...")
+            }
+
+            groups.data.isNullOrEmpty() -> {
+                EmptyState(
+                    title = "No Advisee Groups",
+                    message = "No thesis groups are currently assigned to you."
+                )
+            }
+
+            else -> {
+                groups.data!!.forEach { group ->
+                    GroupCard(group)
+                }
             }
         }
 
-        HorizontalScrollSection("Assigned Schedules", onAction = onCreateSchedule, actionLabel = "Create Schedule") {
-            if (schedules.loading) CircularProgressIndicator()
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 0.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(schedules.data.orEmpty()) { schedule ->
+        SectionHeader(
+            title = "Assigned Schedules",
+            subtitle = "Upcoming thesis defense schedules"
+        )
+
+        when {
+            schedules.loading -> {
+                LoadingView("Loading schedules...")
+            }
+
+            schedules.data.isNullOrEmpty() -> {
+                EmptyState(
+                    title = "No Schedules",
+                    message = "Create a defense schedule to get started."
+                )
+            }
+
+            else -> {
+                schedules.data!!.forEach { schedule ->
+
                     ScheduleCard(
-                        schedule = schedule, 
+                        schedule = schedule,
                         canManage = schedule.adviserId == user?.userId,
-                        currentUserId = user?.userId,
-                        onEdit = { onEditSchedule(schedule) },
-                        onApprove = { user?.let { scheduleViewModel.approve(schedule.scheduleId, it.userId, it.fullName ?: "Professor") } },
-                        onRetractApproval = { user?.let { scheduleViewModel.cancelApproval(schedule.scheduleId, it.userId, it.fullName ?: "Professor") } },
-                        onReject = { user?.let { scheduleViewModel.reject(schedule.scheduleId, it.userId) } }
+
+                        onEdit = {
+                            onEditSchedule(schedule)
+                        },
+
+                        onCancel = {
+                            user?.let {
+                                scheduleViewModel.cancelApproval(
+                                    schedule.scheduleId,
+                                    it.userId,
+                                    it.fullName ?: "Professor"
+                                )
+                            }
+                        },
+
+                        onComplete = {
+                            user?.let {
+                                scheduleViewModel.approve(
+                                    schedule.scheduleId,
+                                    it.userId,
+                                    it.fullName ?: "Professor"
+                                )
+                            }
+                        },
+
+                        onDelete = {
+                            user?.let {
+                                scheduleViewModel.reject(
+                                    schedule.scheduleId,
+                                    it.userId
+                                )
+                            }
+                        }
                     )
                 }
             }
@@ -87,9 +168,9 @@ fun ProfessorDashboardScreen(
     }
 }
 
-@Preview(showBackground = true, widthDp = 390)
+@Preview(showBackground = true)
 @Composable
-private fun ProfessorDashboardScreenPreview() {
+private fun ProfessorDashboardPreview() {
     ThesisScheduleManagementTheme {
         ProfessorDashboardScreen(
             snackbarHostState = remember { SnackbarHostState() },
