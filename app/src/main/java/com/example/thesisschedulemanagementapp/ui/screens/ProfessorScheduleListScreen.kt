@@ -1,8 +1,7 @@
 package com.example.thesisschedulemanagementapp.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,8 +65,9 @@ fun ProfessorScheduleListScreen(
                 message = "Create your first thesis defense schedule."
             )
             else -> {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-                    items(schedules.data.orEmpty()) { schedule ->
+                // Changed from LazyColumn to Column to avoid crash with ScreenScaffold's verticalScroll
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
+                    schedules.data.orEmpty().forEach { schedule ->
                         ScheduleCard(
                             schedule = schedule,
                             canManage = schedule.adviserId == user?.userId,

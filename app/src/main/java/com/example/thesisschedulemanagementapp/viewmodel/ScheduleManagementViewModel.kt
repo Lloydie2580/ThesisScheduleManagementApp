@@ -84,15 +84,37 @@ class ScheduleManagementViewModel : ViewModel() {
         roomId: Int,
         panelistIds: List<Int>
     ): String? {
-        if (groupId == 0 || researchTitle.isBlank() || date.isBlank() || startTime.isBlank() || endTime.isBlank() || roomId == 0) {
-            return "Complete all schedule fields."
+        if (groupId == 0) return "Please select a student group."
+        if (researchTitle.isBlank()) return "Research title cannot be empty."
+        if (date.isBlank()) return "Please select a defense date."
+        
+        // Date Validation: Must be at least 3 days from today
+        val sdf = SimpleDateFormat("MM/dd/yyyy", Locale.US)
+        val selectedDate = runCatching { sdf.parse(date) }.getOrNull() ?: return "Invalid date format."
+        
+        val minDate = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_YEAR, 3)
+        }.time
+
+        if (selectedDate.before(minDate)) {
+            return "Schedules must be booked at least 3 days in advance."
         }
-        if (!isValidDate(date)) return "Date must use MM/DD/YYYY format."
-        val start = parseTime(startTime) ?: return "Start time must use H:MM AM or H:MM PM format."
-        val end = parseTime(endTime) ?: return "End time must use H:MM AM or H:MM PM format."
+
+        if (startTime.isBlank()) return "Please select a start time."
+        if (endTime.isBlank()) return "End time is missing (should be 3 hours after start)."
+        if (roomId == 0) return "Please select a room."
+        
+        val start = parseTime(startTime) ?: return "Start time format is invalid."
+        val end = parseTime(endTime) ?: return "End time format is invalid."
+        
         if (end <= start) return "End time must be after start time."
         if (panelistIds.isEmpty()) return "Select at least one panelist."
         if (panelistIds.size > 2) return "A maximum of 2 panelists can be selected."
+        
         return null
     }
 
@@ -121,16 +143,11 @@ class ScheduleManagementViewModel : ViewModel() {
         return timeFormatter().format(calendar.time)
     }
 
-    private fun isValidDate(value: String): Boolean {
-        val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.US)
-        formatter.isLenient = false
-        return runCatching { formatter.parse(value) != null }.getOrDefault(false)
-    }
-
     private fun parseTime(value: String): Long? {
         val formatter = timeFormatter()
         formatter.isLenient = false
         return runCatching { formatter.parse(value.uppercase(Locale.US))?.time }.getOrNull()
+            ?: runCatching { formatter.parse(value)?.time }.getOrNull()
     }
 
     private fun timeFormatter(): SimpleDateFormat = SimpleDateFormat("h:mm a", Locale.US).apply {

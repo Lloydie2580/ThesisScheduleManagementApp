@@ -137,8 +137,14 @@ fun AppNavigation() {
             user = user,
             viewModel = scheduleViewModel,
             onBack = {
-                user?.let { professorViewModel.refreshSchedules(it.userId) }
-                route = AppRoute.ProfessorDashboard
+                val role = user?.role?.trim()?.lowercase()
+                if (role == "student") {
+                    user?.let { studentViewModel.load(it.userId) }
+                    route = AppRoute.StudentDashboard
+                } else {
+                    user?.let { professorViewModel.refreshSchedules(it.userId) }
+                    route = AppRoute.ProfessorDashboard
+                }
             }
         )
         AppRoute.UpdateSchedule -> UpdateScheduleScreen(

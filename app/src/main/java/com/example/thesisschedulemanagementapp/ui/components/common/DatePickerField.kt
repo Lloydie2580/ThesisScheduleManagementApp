@@ -26,7 +26,7 @@ import java.util.*
 @Composable
 fun DatePickerField(
     label: String,
-    value: String, // now stored as "MM/dd/yyyy" — matches validate()
+    value: String, 
     onValueChange: (String) -> Unit
 ) {
     var showPicker by remember { mutableStateOf(false) }
@@ -50,13 +50,30 @@ fun DatePickerField(
         val initialMillis = value.takeIf { it.isNotBlank() }
             ?.let { runCatching { storageFormat.parse(it)?.time }.getOrNull() }
 
-        val state = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
+        // Calendar for date restriction: Today + 3 days
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_YEAR, 3)
+        }
+        val minDateMillis = calendar.timeInMillis
+
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = initialMillis,
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return utcTimeMillis >= minDateMillis
+                }
+            }
+        )
 
         DatePickerDialog(
             onDismissRequest = { showPicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    state.selectedDateMillis?.let {
+                    datePickerState.selectedDateMillis?.let {
                         onValueChange(storageFormat.format(Date(it)))
                     }
                     showPicker = false
@@ -66,7 +83,7 @@ fun DatePickerField(
                 TextButton(onClick = { showPicker = false }) { Text("Cancel") }
             }
         ) {
-            DatePicker(state = state)
+            DatePicker(state = datePickerState)
         }
     }
 }
@@ -76,14 +93,15 @@ internal fun PickerTrigger(
     label: String,
     value: String?,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    enabled: Boolean = true
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(SurfaceVariant)
-            .clickable { onClick() }
+            .background(if (enabled) SurfaceVariant else SurfaceVariant.copy(alpha = 0.5f))
+            .clickable(enabled = enabled) { onClick() }
             .padding(horizontal = Dimens.SpaceM, vertical = Dimens.SpaceS),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -99,15 +117,15 @@ internal fun PickerTrigger(
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 color = if (value != null)
-                    MaterialTheme.colorScheme.onSurface
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.6f)
                 else
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 1f else 0.6f)
             )
         }
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
+            tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
         )
     }
 }

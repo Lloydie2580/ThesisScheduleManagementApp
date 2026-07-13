@@ -33,10 +33,14 @@ fun ScheduleCard(
     schedule: DefenseSchedule,
     modifier: Modifier = Modifier,
     canManage: Boolean = false,
+    currentUserId: Int? = null,
     onEdit: (() -> Unit)? = null,
     onCancel: (() -> Unit)? = null,
     onComplete: (() -> Unit)? = null,
-    onDelete: (() -> Unit)? = null
+    onDelete: (() -> Unit)? = null,
+    onApprove: (() -> Unit)? = null,
+    onRetractApproval: (() -> Unit)? = null,
+    onReject: (() -> Unit)? = null
 ) {
     AppCard(modifier = modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
@@ -123,55 +127,87 @@ fun ScheduleCard(
                 }
             }
 
-            if (canManage) {
-
+            // Management Buttons
+            if (canManage || onApprove != null || onReject != null) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
+                @OptIn(ExperimentalLayoutApi::class)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS),
                     verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)
                 ) {
+                    if (canManage) {
+                        onEdit?.let {
+                            AppButton(
+                                text = "Edit",
+                                buttonType = ButtonType.OUTLINED,
+                                fullWidth = false,
+                                onClick = it
+                            )
+                        }
 
-                    onEdit?.let {
-                        AppButton(
-                            text = "Edit",
-                            buttonType = ButtonType.OUTLINED,
-                            fullWidth = false,
-                            onClick = it
-                        )
+                        onCancel?.let {
+                            AppButton(
+                                text = "Cancel",
+                                buttonType = ButtonType.OUTLINED,
+                                fullWidth = false,
+                                onClick = it
+                            )
+                        }
+
+                        onComplete?.let {
+                            AppButton(
+                                text = "Complete",
+                                buttonType = ButtonType.PRIMARY,
+                                fullWidth = false,
+                                onClick = it
+                            )
+                        }
+
+                        onDelete?.let {
+                            AppButton(
+                                text = "Delete",
+                                buttonType = ButtonType.DANGER,
+                                fullWidth = false,
+                                onClick = it
+                            )
+                        }
                     }
 
-                    onCancel?.let {
-                        AppButton(
-                            text = "Cancel",
-                            buttonType = ButtonType.OUTLINED,
-                            fullWidth = false,
-                            onClick = it
-                        )
-                    }
-
-                    onComplete?.let {
-                        AppButton(
-                            text = "Complete",
-                            buttonType = ButtonType.PRIMARY,
-                            fullWidth = false,
-                            onClick = it
-                        )
-                    }
-
-                    onDelete?.let {
-                        AppButton(
-                            text = "Delete",
-                            buttonType = ButtonType.DANGER,
-                            fullWidth = false,
-                            onClick = it
-                        )
+                    // Panelist actions
+                    val isPanelist = currentUserId != null && schedule.panelists?.any { it.userId == currentUserId } == true
+                    if (isPanelist) {
+                        onApprove?.let {
+                            AppButton(
+                                text = "Approve",
+                                buttonType = ButtonType.PRIMARY,
+                                fullWidth = false,
+                                onClick = it
+                            )
+                        }
+                        onRetractApproval?.let {
+                            AppButton(
+                                text = "Retract",
+                                buttonType = ButtonType.OUTLINED,
+                                fullWidth = false,
+                                onClick = it
+                            )
+                        }
+                        onReject?.let {
+                            AppButton(
+                                text = "Reject",
+                                buttonType = ButtonType.DANGER,
+                                fullWidth = false,
+                                onClick = it
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
+
 @Composable
 private fun ScheduleInfoRow(
     icon: ImageVector,

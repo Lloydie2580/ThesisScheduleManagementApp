@@ -3,6 +3,8 @@ package com.example.thesisschedulemanagementapp.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -61,7 +63,6 @@ fun ScheduleFormScreen(
         mutableStateListOf<Int>().apply { addAll(schedule?.panelists?.map { it.userId }.orEmpty()) }
     }
 
-    // Auto-fill details if group is already known (e.g. for student with only one group)
     LaunchedEffect(groups) {
         if (groupId == 0 && groups.size == 1) {
             val group = groups.first()
@@ -78,7 +79,6 @@ fun ScheduleFormScreen(
         }
     }
 
-    // Memoize the filtered list to avoid recalculating on every recomposition
     val availableProfessors = remember(professors, user) {
         professors.filter { it.userId != user?.userId }
     }
@@ -91,6 +91,8 @@ fun ScheduleFormScreen(
         }
     }
 
+    val isStudent = remember(user) { user?.role?.trim()?.equals("student", true) == true }
+
     ScreenScaffold(snackbarHostState) {
         BackHeader(title, onBack)
 
@@ -98,7 +100,7 @@ fun ScheduleFormScreen(
             title = "Defense Details",
             subtitle = "Fill in the schedule information below."
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) { // Use SpaceXS (4dp) for tightest field grouping
 
                 PickerField(
                     label = "Group Code",
@@ -128,26 +130,35 @@ fun ScheduleFormScreen(
                     onValueChange = { date = it }
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)
+                ) {
                     TimePickerField(
                         label = "Start Time",
                         value = startTime,
                         onValueChange = {
                             startTime = it
-                            viewModel.calculateEndTime(it)?.let { calculatedEndTime -> endTime = calculatedEndTime }
+                            viewModel.calculateEndTime(it)?.let { calculatedEndTime -> 
+                                endTime = calculatedEndTime 
+                            }
                         },
                         modifier = Modifier.weight(1f)
                     )
-                    TimePickerField(
-                        label = "End Time",
+                    
+                    // Display End Time as a disabled AppTextField to make it clearly non-editable but visible
+                    AppTextField(
                         value = endTime,
-                        onValueChange = { endTime = it },
+                        onValueChange = {},
+                        label = "End Time (Auto)",
+                        readOnly = true,
+                        enabled = false,
                         modifier = Modifier.weight(1f)
                     )
                 }
 
                 PickerField(
-                    label = "Room",
+                    label = "Room (Venue)",
                     selectedKey = roomId,
                     items = viewModel.rooms,
                     key = { it.roomId },
@@ -165,10 +176,11 @@ fun ScheduleFormScreen(
                 Text(
                     text = "Panelists",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = Dimens.SpaceS)
                 )
 
-                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXXS)) {
                     availableProfessors.forEach { professor ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(
@@ -191,9 +203,12 @@ fun ScheduleFormScreen(
                 }
 
                 AppButton(
-                    text = if (schedule == null) "Create Schedule" else "Save Changes",
+                    text = if (schedule == null) {
+                        if (isStudent) "Request Schedule" else "Create Schedule"
+                    } else "Save Changes",
                     loading = loading,
                     buttonType = ButtonType.PRIMARY,
+                    modifier = Modifier.padding(top = Dimens.SpaceM),
                     onClick = {
                         val currentUserId = user?.userId ?: 0
                         val validation = viewModel.validate(
