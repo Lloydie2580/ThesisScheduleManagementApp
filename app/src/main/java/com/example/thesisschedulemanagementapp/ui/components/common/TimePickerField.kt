@@ -23,7 +23,7 @@ fun TimePickerField(
     modifier: Modifier = Modifier,
     readOnly: Boolean = false
 ) {
-    var showPicker by remember { mutableStateOf(false) }
+    val showPicker = remember { mutableStateOf(false) }
 
     val displayText = remember(value) {
         value.takeIf { it.isNotBlank() }
@@ -33,29 +33,30 @@ fun TimePickerField(
         label = label,
         value = displayText,
         icon = Icons.Default.AccessTime,
-        onClick = { if (!readOnly) showPicker = true }
+        onClick = { if (!readOnly) showPicker.value = true },
+        modifier = modifier
     )
 
-    if (showPicker && !readOnly) {
+    if (showPicker.value && !readOnly) {
         // Robust parsing for initial state
-        val calendar = Calendar.getInstance()
-        val formatter = SimpleDateFormat("h:mm a", Locale.US)
-        val parsed = value.takeIf { it.isNotBlank() }?.let { v ->
-            runCatching { formatter.parse(v.uppercase(Locale.US)) }.getOrNull()
+        val formatter = remember { SimpleDateFormat("h:mm a", Locale.US) }
+        val initialTime = remember(value) {
+            val calendar = Calendar.getInstance()
+            value.takeIf { it.isNotBlank() }?.let { v ->
+                runCatching { formatter.parse(v.uppercase(Locale.US)) }.getOrNull()
+            }?.let {
+                calendar.time = it
+                calendar.get(Calendar.HOUR_OF_DAY) to calendar.get(Calendar.MINUTE)
+            } ?: (9 to 0)
         }
 
-        parsed?.let { calendar.time = it }
-
-        val initHour = if (parsed != null) calendar.get(Calendar.HOUR_OF_DAY) else 9
-        val initMinute = if (parsed != null) calendar.get(Calendar.MINUTE) else 0
-
         val state = rememberTimePickerState(
-            initialHour = initHour,
-            initialMinute = initMinute,
+            initialHour = initialTime.first,
+            initialMinute = initialTime.second,
             is24Hour = false
         )
 
-        Dialog(onDismissRequest = { showPicker = false }) {
+        Dialog(onDismissRequest = { showPicker.value = false }) {
             Surface(
                 shape = MaterialTheme.shapes.large,
                 color = MaterialTheme.colorScheme.surface
@@ -76,14 +77,14 @@ fun TimePickerField(
                         modifier = Modifier.padding(top = Dimens.SpaceM),
                         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End
                     ) {
-                        TextButton(onClick = { showPicker = false }) { Text("Cancel") }
+                        TextButton(onClick = { showPicker.value = false }) { Text("Cancel") }
                         TextButton(onClick = {
                             val cal = Calendar.getInstance().apply {
                                 set(Calendar.HOUR_OF_DAY, state.hour)
                                 set(Calendar.MINUTE, state.minute)
                             }
                             onValueChange(formatter.format(cal.time))
-                            showPicker = false
+                            showPicker.value = false
                         }) { Text("OK") }
                     }
                 }

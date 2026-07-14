@@ -50,7 +50,6 @@ fun DatePickerField(
         val initialMillis = value.takeIf { it.isNotBlank() }
             ?.let { runCatching { storageFormat.parse(it)?.time }.getOrNull() }
 
-        // Calendar for date restriction: Today + 3 days
         val calendar = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
@@ -94,10 +93,11 @@ internal fun PickerTrigger(
     value: String?,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(if (enabled) SurfaceVariant else SurfaceVariant.copy(alpha = 0.5f))

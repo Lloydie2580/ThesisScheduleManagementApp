@@ -2,14 +2,11 @@ package com.example.thesisschedulemanagementapp.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
 import com.example.thesisschedulemanagementapp.data.model.User
 import com.example.thesisschedulemanagementapp.ui.components.cards.GroupCard
@@ -22,7 +19,6 @@ import com.example.thesisschedulemanagementapp.ui.components.headers.DashboardHe
 import com.example.thesisschedulemanagementapp.ui.components.layout.ScreenScaffold
 import com.example.thesisschedulemanagementapp.ui.components.models.ButtonType
 import com.example.thesisschedulemanagementapp.ui.theme.Dimens
-import com.example.thesisschedulemanagementapp.ui.theme.ThesisScheduleManagementTheme
 import com.example.thesisschedulemanagementapp.viewmodel.ProfessorDashboardViewModel
 import com.example.thesisschedulemanagementapp.viewmodel.ScheduleManagementViewModel
 
@@ -39,8 +35,8 @@ fun ProfessorDashboardScreen(
     onOpenNotifications: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val schedules by viewModel.schedules.collectAsState()
-    val groups by viewModel.groups.collectAsState()
+    val schedulesState by viewModel.schedules.collectAsState()
+    val groupsState by viewModel.groups.collectAsState()
     val message by scheduleViewModel.message.collectAsState()
 
     LaunchedEffect(user?.userId) {
@@ -91,82 +87,81 @@ fun ProfessorDashboardScreen(
         )
 
         when {
-            groups.loading -> LoadingView("Loading groups...")
-            groups.data.isNullOrEmpty() -> EmptyState(
+            groupsState.loading -> LoadingView("Loading groups...")
+            groupsState.data.isNullOrEmpty() -> EmptyState(
                 title = "No Advisee Groups",
                 message = "No thesis groups are currently assigned to you."
             )
             else -> {
                 Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
-                    groups.data!!.forEach { group ->
+                    groupsState.data!!.forEach { group ->
                         GroupCard(group)
                     }
                 }
             }
         }
 
-        SectionHeader(
-            title = "Assigned Schedules",
-            subtitle = "Upcoming thesis defense schedules"
-        )
+        if (!schedulesState.loading && !schedulesState.data.isNullOrEmpty()) {
+            val allSchedules = schedulesState.data!!
+            val adviseeSchedules = allSchedules.filter { it.adviserId == user?.userId }
+            val panelistSchedules = allSchedules.filter { it.adviserId != user?.userId }
 
-        when {
-            schedules.loading -> LoadingView("Loading schedules...")
-            schedules.data.isNullOrEmpty() -> EmptyState(
-                title = "No Schedules",
-                message = "Create a defense schedule to get started."
-            )
-            else -> {
+            if (adviseeSchedules.isNotEmpty()) {
+                SectionHeader(
+                    title = "My Advisee Defenses",
+                    subtitle = "Schedules you created for your supervisees"
+                )
                 Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-                    schedules.data!!.forEach { schedule ->
-                        val isAdviser = schedule.adviserId == user?.userId
+                    adviseeSchedules.forEach { schedule ->
+                        val hasApproved = schedule.adviserApproved
                         
                         ScheduleCard(
                             schedule = schedule,
-                            canManage = isAdviser,
+                            canManage = true,
                             currentUserId = user?.userId,
                             onEdit = { onEditSchedule(schedule) },
-                            onCancel = {
-                                user?.let { scheduleViewModel.cancel(schedule.scheduleId, it.userId) }
-                            },
-                            onComplete = {
-                                user?.let { scheduleViewModel.complete(schedule.scheduleId, it.userId) }
-                            },
-                            onDelete = {
-                                user?.let { scheduleViewModel.delete(schedule.scheduleId, it.userId) }
-                            },
-                            onApprove = {
-                                user?.let { scheduleViewModel.approve(schedule.scheduleId, it.userId, it.fullName ?: "Professor") }
-                            },
-                            onRetractApproval = {
-                                user?.let { scheduleViewModel.cancelApproval(schedule.scheduleId, it.userId, it.fullName ?: "Professor") }
-                            },
-                            onReject = {
-                                user?.let { scheduleViewModel.reject(schedule.scheduleId, it.userId) }
-                            }
+                            onCancel = { user?.let { scheduleViewModel.cancel(schedule.scheduleId, it.userId) } },
+                            onComplete = { user?.let { scheduleViewModel.complete(schedule.scheduleId, it.userId) } },
+                            onDelete = { user?.let { scheduleViewModel.delete(schedule.scheduleId, it.userId) } },
+                            // Show Approve button if the adviser hasn't approved yet (e.g. for student requests)
+                            onApprove = if (!hasApproved) {
+                                { user?.let { scheduleViewModel.approve(schedule.scheduleId, it.userId, it.fullName ?: "Professor") } }
+                            } else null
                         )
                     }
                 }
             }
-        }
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-private fun ProfessorDashboardPreview() {
-    ThesisScheduleManagementTheme {
-        ProfessorDashboardScreen(
-            snackbarHostState = remember { SnackbarHostState() },
-            user = null,
-            viewModel = ProfessorDashboardViewModel(),
-            scheduleViewModel = ScheduleManagementViewModel(),
-            onOpenSchedules = {},
-            onEditSchedule = {},
-            onCreateSchedule = {},
-            onCreateGroup = {},
-            onOpenNotifications = {},
-            onLogout = {}
-        )
+            if (panelistSchedules.isNotEmpty()) {
+                SectionHeader(
+                    title = "Panelist Assignments",
+                    subtitle = "Defenses where you are an invited evaluator"
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
+                    panelistSchedules.forEach { schedule ->
+                        val myPanelistInfo = schedule.panelists?.find { it.userId == user?.userId }
+                        val hasApproved = myPanelistInfo?.isApproved == true
+
+                        ScheduleCard(
+                            schedule = schedule,
+                            canManage = false,
+                            currentUserId = user?.userId,
+                            onApprove = if (!hasApproved) {
+                                { user?.let { scheduleViewModel.approve(schedule.scheduleId, it.userId, it.fullName ?: "Professor") } }
+                            } else null,
+                            onRetractApproval = if (hasApproved) {
+                                { user?.let { scheduleViewModel.cancelApproval(schedule.scheduleId, it.userId, it.fullName ?: "Professor") } }
+                            } else null,
+                            onReject = { user?.let { scheduleViewModel.reject(schedule.scheduleId, it.userId) } }
+                        )
+                    }
+                }
+            }
+        } else if (schedulesState.loading) {
+            LoadingView("Loading schedules...")
+        } else {
+            SectionHeader(title = "Assigned Schedules")
+            EmptyState(title = "No Schedules", message = "No upcoming defenses found.")
+        }
     }
 }

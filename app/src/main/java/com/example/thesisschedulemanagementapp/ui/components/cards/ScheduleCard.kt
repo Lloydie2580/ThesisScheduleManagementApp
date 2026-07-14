@@ -136,6 +136,16 @@ fun ScheduleCard(
                     horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS),
                     verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)
                 ) {
+                    // Common approval button (for both Adviser and Panelists if provided)
+                    onApprove?.let {
+                        AppButton(
+                            text = "Approve",
+                            buttonType = ButtonType.PRIMARY,
+                            fullWidth = false,
+                            onClick = it
+                        )
+                    }
+
                     if (canManage) {
                         onEdit?.let {
                             AppButton(
@@ -174,33 +184,22 @@ fun ScheduleCard(
                         }
                     }
 
-                    // Panelist actions
-                    val isPanelist = currentUserId != null && schedule.panelists?.any { it.userId == currentUserId } == true
-                    if (isPanelist) {
-                        onApprove?.let {
-                            AppButton(
-                                text = "Approve",
-                                buttonType = ButtonType.PRIMARY,
-                                fullWidth = false,
-                                onClick = it
-                            )
-                        }
-                        onRetractApproval?.let {
-                            AppButton(
-                                text = "Retract",
-                                buttonType = ButtonType.OUTLINED,
-                                fullWidth = false,
-                                onClick = it
-                            )
-                        }
-                        onReject?.let {
-                            AppButton(
-                                text = "Reject",
-                                buttonType = ButtonType.DANGER,
-                                fullWidth = false,
-                                onClick = it
-                            )
-                        }
+                    // Specific Panelist actions
+                    onRetractApproval?.let {
+                        AppButton(
+                            text = "Retract",
+                            buttonType = ButtonType.OUTLINED,
+                            fullWidth = false,
+                            onClick = it
+                        )
+                    }
+                    onReject?.let {
+                        AppButton(
+                            text = "Reject",
+                            buttonType = ButtonType.DANGER,
+                            fullWidth = false,
+                            onClick = it
+                        )
                     }
                 }
             }
