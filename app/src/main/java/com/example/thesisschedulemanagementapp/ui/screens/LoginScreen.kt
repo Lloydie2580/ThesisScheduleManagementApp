@@ -46,10 +46,7 @@ fun LoginScreen(
             subtitle = "Schedule Management System"
         )
 
-        FormPanel(
-            title = "Welcome Back",
-            subtitle = "Login using your student or professor account."
-        ) {
+        FormPanel{
             Column(
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)
             ) {

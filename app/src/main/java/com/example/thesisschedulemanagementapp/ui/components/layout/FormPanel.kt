@@ -11,16 +11,32 @@ import com.example.thesisschedulemanagementapp.ui.theme.Dimens
 
 @Composable
 fun FormPanel(
-    title: String,
-    subtitle: String,
+    title: String? = null,
+    subtitle: String? = null,
     content: @Composable () -> Unit
 ) {
     AppCard {
         Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
-                Text(text = title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+            if (title != null || subtitle != null) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
+                    title?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    subtitle?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
+
             content()
         }
     }
