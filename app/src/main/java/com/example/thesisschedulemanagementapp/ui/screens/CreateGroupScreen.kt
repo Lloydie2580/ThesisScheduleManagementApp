@@ -1,5 +1,6 @@
 package com.example.thesisschedulemanagementapp.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,7 +47,10 @@ fun CreateGroupScreen(
     val selectedPanelists = remember { mutableStateListOf<Int>() }
     var loading by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+
     LaunchedEffect(Unit) {
+        viewModel.initRepositories(context)
         viewModel.loadCreationOptions()
     }
 

@@ -67,9 +67,16 @@ class ProfessorDashboardViewModel : ViewModel() {
 
     fun loadCreationOptions() {
         viewModelScope.launch {
-            professorRepository.getProfessors().onSuccess { _allProfessors.value = it }
+            professorRepository.getProfessors().onSuccess {
+                _allProfessors.value = it
+            }
+
             if (::authRepository.isInitialized) {
-                authRepository.getStudents().onSuccess { _allStudents.value = it }
+                authRepository.getStudents().onSuccess {
+                    _allStudents.value = it
+                }
+            } else {
+                _message.value = "AuthRepository NOT initialized"
             }
         }
     }
