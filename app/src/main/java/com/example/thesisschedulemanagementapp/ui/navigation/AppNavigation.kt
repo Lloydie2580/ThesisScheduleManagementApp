@@ -36,12 +36,20 @@ import com.example.thesisschedulemanagementapp.viewmodel.StudentDashboardViewMod
 fun AppNavigation() {
     val context = LocalContext.current
     val activity = context as ComponentActivity
+    val application = context.applicationContext as Application
+    
     val authViewModel = rememberViewModel<AuthViewModel> {
-        AuthViewModel(context.applicationContext as Application)
+        AuthViewModel(application)
     }
-    val studentViewModel = rememberViewModel<StudentDashboardViewModel> { StudentDashboardViewModel() }
-    val professorViewModel = rememberViewModel<ProfessorDashboardViewModel> { ProfessorDashboardViewModel() }
-    val scheduleViewModel = rememberViewModel<ScheduleManagementViewModel> { ScheduleManagementViewModel() }
+    val studentViewModel = rememberViewModel<StudentDashboardViewModel> { 
+        StudentDashboardViewModel() 
+    }
+    val professorViewModel = rememberViewModel<ProfessorDashboardViewModel> { 
+        ProfessorDashboardViewModel().apply { initRepositories(application) }
+    }
+    val scheduleViewModel = rememberViewModel<ScheduleManagementViewModel> { 
+        ScheduleManagementViewModel() 
+    }
 
     val authState by authViewModel.state.collectAsState()
     var route by remember {
@@ -58,8 +66,8 @@ fun AppNavigation() {
     val user: User? = authState.data
 
     LaunchedEffect(authState.data?.userId, authState.success) {
-        authState.data?.let {
-            route = if (it.role.equals("student", true)) AppRoute.StudentDashboard else AppRoute.ProfessorDashboard
+        if (authState.success && authState.data != null) {
+            route = if (authState.data?.role.equals("student", true)) AppRoute.StudentDashboard else AppRoute.ProfessorDashboard
         }
     }
 
