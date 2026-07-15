@@ -3,7 +3,6 @@ package com.example.thesisschedulemanagementapp.ui.components.headers
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.Notifications
@@ -20,7 +19,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.thesisschedulemanagementapp.data.model.User
 import com.example.thesisschedulemanagementapp.ui.theme.Dimens
 import com.example.thesisschedulemanagementapp.ui.theme.Primary
@@ -37,67 +35,54 @@ fun DashboardHeader(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
 
-            Column(modifier = Modifier.weight(1f)) {
-
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = greeting().uppercase(),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.5.sp,
-                    color = MaterialTheme.colorScheme.primary
+                    text = greeting(),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f)
                 )
 
-                Text(
-                    text = user?.fullName?.substringBefore(" ") ?: "Guest",
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        brush = Brush.linearGradient(listOf(Primary, Secondary))
-                    ),
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
+                    onNotifications?.let {
+                        HeaderIconButton(
+                            icon = Icons.Outlined.Notifications,
+                            contentDescription = "Notifications",
+                            onClick = it
+                        )
+                    }
 
-                Spacer(modifier = Modifier.height(Dimens.SpaceXS))
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(SurfaceVariant)
-                        .padding(horizontal = Dimens.SpaceM, vertical = Dimens.SpaceXS)
-                ) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
-
-                onNotifications?.let {
                     HeaderIconButton(
-                        icon = Icons.Outlined.Notifications,
-                        contentDescription = "Notifications",
-                        onClick = it
+                        icon = Icons.Outlined.Logout,
+                        contentDescription = "Logout",
+                        onClick = onLogout
                     )
                 }
-
-                HeaderIconButton(
-                    icon = Icons.Outlined.Logout,
-                    contentDescription = "Logout",
-                    onClick = onLogout
-                )
             }
+
+            Text(
+                text = user?.fullName?.substringBefore(" ") ?: "Guest",
+                style = MaterialTheme.typography.displayMedium.copy(
+                    brush = Brush.linearGradient(listOf(Primary, Secondary))
+                ),
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.offset(y = (-8).dp)
+            )
         }
 
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outline,
+            modifier = Modifier.offset(y = (-8).dp)
+        )
     }
 }
 
@@ -123,10 +108,9 @@ private fun HeaderIconButton(
 }
 
 private fun greeting(): String {
-    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-    return when {
-        hour < 12 -> "Good Morning"
-        hour < 18 -> "Good Afternoon"
-        else -> "Good Evening"
+    return when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
+        in 0..11 -> "Good Morning,"
+        in 12..16 -> "Good Afternoon,"
+        else -> "Good Evening,"
     }
 }

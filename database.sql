@@ -35,6 +35,14 @@ CREATE TABLE group_members (
     CONSTRAINT fk_members_student FOREIGN KEY (student_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
+CREATE TABLE group_panelists (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    group_id INT NOT NULL,
+    professor_id INT NOT NULL,
+    CONSTRAINT fk_group_panelists_group FOREIGN KEY (group_id) REFERENCES student_groups(group_id) ON DELETE CASCADE,
+    CONSTRAINT fk_group_panelists_professor FOREIGN KEY (professor_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
 CREATE TABLE rooms (
     room_id INT AUTO_INCREMENT PRIMARY KEY,
     room_name VARCHAR(100) NOT NULL UNIQUE
@@ -49,6 +57,7 @@ CREATE TABLE defense_schedules (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     status ENUM('Pending', 'Scheduled', 'Rescheduled', 'Completed', 'Cancelled') NOT NULL DEFAULT 'Pending',
+    adviser_approved TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_schedules_group FOREIGN KEY (group_id) REFERENCES student_groups(group_id),
@@ -60,6 +69,7 @@ CREATE TABLE schedule_panelists (
     id INT AUTO_INCREMENT PRIMARY KEY,
     schedule_id INT NOT NULL,
     professor_id INT NOT NULL,
+    is_approved TINYINT(1) NOT NULL DEFAULT 0,
     CONSTRAINT fk_panelists_schedule FOREIGN KEY (schedule_id) REFERENCES defense_schedules(schedule_id) ON DELETE CASCADE,
     CONSTRAINT fk_panelists_professor FOREIGN KEY (professor_id) REFERENCES users(user_id) ON DELETE CASCADE
 );

@@ -19,4 +19,10 @@ class AuthRepository(private val sessionManager: SessionManager) {
         val json = ApiClient.post("signup.php", SignupRequest(fullName, email, password, role))
         AppMessage(ApiClient.success(json), ApiClient.message(json))
     }.getOrElse { AppMessage(false, it.message ?: "Unable to sign up.") }
+
+    suspend fun getStudents(): Result<List<User>> = runCatching {
+        val json = ApiClient.get("get_students.php")
+        if (!ApiClient.success(json)) error(ApiClient.message(json))
+        ApiClient.listFromData<User>(json)
+    }
 }

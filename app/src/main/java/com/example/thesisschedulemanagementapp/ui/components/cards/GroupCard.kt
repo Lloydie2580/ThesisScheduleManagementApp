@@ -39,7 +39,7 @@ fun GroupCard(group: StudentGroup) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = group.groupCode.take(2).uppercase(),
+                    text = group.groupCode?.take(2)?.uppercase() ?: "--",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = on
@@ -53,13 +53,13 @@ fun GroupCard(group: StudentGroup) {
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)
             ) {
                 Text(
-                    text = group.groupCode,
+                    text = group.groupCode ?: "No Group Code",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
 
                 Text(
-                    text = group.researchTitle,
+                    text = group.researchTitle ?: "No Research Title",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2
@@ -73,9 +73,11 @@ fun GroupCard(group: StudentGroup) {
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                if (group.members.isNotEmpty()) {
+                if (!group.members.isNullOrEmpty())  {
                     Text(
-                        text = group.members.joinToString { it.fullName },
+                        text = group.members?.joinToString {
+                            it.fullName ?: "Unknown"
+                        } ?: "",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

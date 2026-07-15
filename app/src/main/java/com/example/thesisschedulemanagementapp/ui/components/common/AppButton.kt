@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.example.thesisschedulemanagementapp.ui.theme.Dimens
-import com.example.thesisschedulemanagementapp.ui.models.ButtonType
+import com.example.thesisschedulemanagementapp.ui.components.models.ButtonType
 
 @Composable
 fun AppButton(

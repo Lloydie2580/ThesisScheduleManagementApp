@@ -10,4 +10,3 @@ foreach ($professors as &$professor) {
 }
 
 send_response(true, "Professors loaded.", $professors);
-?>

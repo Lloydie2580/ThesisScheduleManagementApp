@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.thesisschedulemanagementapp.ui.components.common.AppButton
-import com.example.thesisschedulemanagementapp.ui.models.ButtonType
+import com.example.thesisschedulemanagementapp.ui.components.models.ButtonType
 import com.example.thesisschedulemanagementapp.ui.theme.Dimens
 
 @Composable

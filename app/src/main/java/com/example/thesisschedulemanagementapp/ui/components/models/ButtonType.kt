@@ -1,4 +1,4 @@
-package com.example.thesisschedulemanagementapp.ui.models
+package com.example.thesisschedulemanagementapp.ui.components.models
 
 enum class ButtonType {
     PRIMARY,

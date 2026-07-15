@@ -16,15 +16,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
 import com.example.thesisschedulemanagementapp.data.model.User
-import com.example.thesisschedulemanagementapp.ui.screens.professor.CreateScheduleScreen
-import com.example.thesisschedulemanagementapp.ui.screens.auth.LoginScreen
-import com.example.thesisschedulemanagementapp.ui.screens.shared.NotificationsScreen
-import com.example.thesisschedulemanagementapp.ui.screens.professor.ProfessorDashboardScreen
-import com.example.thesisschedulemanagementapp.ui.screens.professor.ProfessorScheduleListScreen
-import com.example.thesisschedulemanagementapp.ui.screens.auth.SignUpScreen
-import com.example.thesisschedulemanagementapp.ui.screens.student.StudentDashboardScreen
-import com.example.thesisschedulemanagementapp.ui.screens.student.StudentScheduleScreen
-import com.example.thesisschedulemanagementapp.ui.screens.professor.UpdateScheduleScreen
+import com.example.thesisschedulemanagementapp.ui.screens.CreateGroupScreen
+import com.example.thesisschedulemanagementapp.ui.screens.CreateScheduleScreen
+import com.example.thesisschedulemanagementapp.ui.screens.LoginScreen
+import com.example.thesisschedulemanagementapp.ui.screens.NotificationsScreen
+import com.example.thesisschedulemanagementapp.ui.screens.ProfessorDashboardScreen
+import com.example.thesisschedulemanagementapp.ui.screens.ProfessorScheduleListScreen
+import com.example.thesisschedulemanagementapp.ui.screens.SignUpScreen
+import com.example.thesisschedulemanagementapp.ui.screens.StudentDashboardScreen
+import com.example.thesisschedulemanagementapp.ui.screens.StudentScheduleScreen
+import com.example.thesisschedulemanagementapp.ui.screens.UpdateScheduleScreen
 import com.example.thesisschedulemanagementapp.ui.navigation.AppRoute
 import com.example.thesisschedulemanagementapp.viewmodel.AuthViewModel
 import com.example.thesisschedulemanagementapp.viewmodel.ProfessorDashboardViewModel
@@ -35,12 +36,20 @@ import com.example.thesisschedulemanagementapp.viewmodel.StudentDashboardViewMod
 fun AppNavigation() {
     val context = LocalContext.current
     val activity = context as ComponentActivity
+    val application = context.applicationContext as Application
+    
     val authViewModel = rememberViewModel<AuthViewModel> {
-        AuthViewModel(context.applicationContext as Application)
+        AuthViewModel(application)
     }
-    val studentViewModel = rememberViewModel<StudentDashboardViewModel> { StudentDashboardViewModel() }
-    val professorViewModel = rememberViewModel<ProfessorDashboardViewModel> { ProfessorDashboardViewModel() }
-    val scheduleViewModel = rememberViewModel<ScheduleManagementViewModel> { ScheduleManagementViewModel() }
+    val studentViewModel = rememberViewModel<StudentDashboardViewModel> { 
+        StudentDashboardViewModel() 
+    }
+    val professorViewModel = rememberViewModel<ProfessorDashboardViewModel> { 
+        ProfessorDashboardViewModel().apply { initRepositories(application) }
+    }
+    val scheduleViewModel = rememberViewModel<ScheduleManagementViewModel> { 
+        ScheduleManagementViewModel() 
+    }
 
     val authState by authViewModel.state.collectAsState()
     var route by remember {
@@ -57,8 +66,8 @@ fun AppNavigation() {
     val user: User? = authState.data
 
     LaunchedEffect(authState.data?.userId, authState.success) {
-        authState.data?.let {
-            route = if (it.role.equals("student", true)) AppRoute.StudentDashboard else AppRoute.ProfessorDashboard
+        if (authState.success && authState.data != null) {
+            route = if (authState.data?.role.equals("student", true)) AppRoute.StudentDashboard else AppRoute.ProfessorDashboard
         }
     }
 
@@ -87,6 +96,7 @@ fun AppNavigation() {
             user = user,
             viewModel = studentViewModel,
             onOpenSchedule = { route = AppRoute.StudentSchedule },
+            onRequestSchedule = { route = AppRoute.CreateSchedule },
             onOpenNotifications = { route = AppRoute.Notifications },
             onLogout = {
                 authViewModel.logout()
@@ -103,8 +113,16 @@ fun AppNavigation() {
             snackbarHostState = snackbarHostState,
             user = user,
             viewModel = professorViewModel,
+            scheduleViewModel = scheduleViewModel,
             onOpenSchedules = { route = AppRoute.ProfessorSchedules },
+            onEditSchedule = {
+                selectedSchedule = it
+                route = AppRoute.UpdateSchedule
+            },
             onCreateSchedule = { route = AppRoute.CreateSchedule },
+            onCreateGroup = {
+                route = AppRoute.CreateGroup
+            },
             onOpenNotifications = { route = AppRoute.Notifications },
             onLogout = {
                 authViewModel.logout()
@@ -127,8 +145,14 @@ fun AppNavigation() {
             user = user,
             viewModel = scheduleViewModel,
             onBack = {
-                user?.let { professorViewModel.refreshSchedules(it.userId) }
-                route = AppRoute.ProfessorDashboard
+                val role = user?.role?.trim()?.lowercase()
+                if (role == "student") {
+                    user?.let { studentViewModel.load(it.userId) }
+                    route = AppRoute.StudentDashboard
+                } else {
+                    user?.let { professorViewModel.refreshSchedules(it.userId) }
+                    route = AppRoute.ProfessorDashboard
+                }
             }
         )
         AppRoute.UpdateSchedule -> UpdateScheduleScreen(
@@ -148,6 +172,15 @@ fun AppNavigation() {
             professorViewModel = professorViewModel,
             onBack = {
                 route = if (user?.role.equals("student", true)) AppRoute.StudentDashboard else AppRoute.ProfessorDashboard
+            }
+        )
+        AppRoute.CreateGroup -> CreateGroupScreen(
+            snackbarHostState = snackbarHostState,
+            user = user,
+            viewModel = professorViewModel,
+            onBack = {
+                user?.let { professorViewModel.load(it.userId) }
+                route = AppRoute.ProfessorDashboard
             }
         )
     }

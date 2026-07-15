@@ -1,11 +1,14 @@
-package com.example.thesisschedulemanagementapp.ui.screens.professor
+package com.example.thesisschedulemanagementapp.ui.screens
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
 import com.example.thesisschedulemanagementapp.data.model.User
-import com.example.thesisschedulemanagementapp.ui.screens.shared.ScheduleFormScreen
+import com.example.thesisschedulemanagementapp.ui.screens.ScheduleFormScreen
+import com.example.thesisschedulemanagementapp.ui.theme.ThesisScheduleManagementTheme
 import com.example.thesisschedulemanagementapp.viewmodel.ScheduleManagementViewModel
 
 @Composable
@@ -17,7 +20,9 @@ fun UpdateScheduleScreen(
     onBack: () -> Unit
 ) {
     LaunchedEffect(user?.userId) {
-        user?.let { viewModel.loadOptions(it.userId) }
+        user?.let {
+            viewModel.loadOptions(it.userId)
+        }
     }
 
     ScheduleFormScreen(
@@ -29,4 +34,18 @@ fun UpdateScheduleScreen(
         onSubmit = viewModel::update,
         onBack = onBack
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun UpdateSchedulePreview() {
+    ThesisScheduleManagementTheme {
+        UpdateScheduleScreen(
+            snackbarHostState = remember { SnackbarHostState() },
+            user = null,
+            schedule = null,
+            viewModel = ScheduleManagementViewModel(),
+            onBack = {}
+        )
+    }
 }

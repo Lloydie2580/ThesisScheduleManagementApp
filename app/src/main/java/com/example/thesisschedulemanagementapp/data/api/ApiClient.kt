@@ -16,24 +16,20 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 object ApiClient {
-    const val EMULATOR_BASE_URL = "http://10.0.2.2/thesis_schedule_api/"
-    const val LAN_BASE_URL_EXAMPLE = "http://192.168.1.44/thesis_schedule_api/"
+    // TIP: 10.0.2.2 is for Emulator only.
+    private const val BASE_URL = "http://10.0.2.2/thesis_schedule_api/"
 
-    var baseUrl: String = LAN_BASE_URL_EXAMPLE
+    var baseUrl: String = BASE_URL
         private set
 
     @PublishedApi
     internal val gson = Gson()
     private val client = HttpClient(CIO) {
         install(HttpTimeout) {
-            requestTimeoutMillis = 20_000
+            requestTimeoutMillis = 30_000
             connectTimeoutMillis = 15_000
-            socketTimeoutMillis = 20_000
+            socketTimeoutMillis = 30_000
         }
-    }
-
-    fun updateBaseUrl(url: String) {
-        baseUrl = if (url.endsWith("/")) url else "$url/"
     }
 
     suspend fun post(endpoint: String, body: Any): JsonObject {
@@ -73,7 +69,7 @@ object ApiClient {
 
     private fun parse(text: String): JsonObject = try {
         gson.fromJson(text, JsonObject::class.java)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         JsonObject().apply {
             addProperty("success", false)
             addProperty("message", "Invalid JSON response from server.")
