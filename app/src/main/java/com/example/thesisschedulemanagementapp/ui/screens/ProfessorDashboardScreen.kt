@@ -103,12 +103,7 @@ fun ProfessorDashboardScreen(
         )
 
         Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
-            AppButton(
-                text = "Create Defense Schedule",
-                icon = Icons.Default.AddCircle,
-                buttonType = ButtonType.PRIMARY,
-                onClick = onCreateSchedule
-            )
+
 
             AppButton(
                 text = "Manage Schedules",

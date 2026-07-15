@@ -106,12 +106,24 @@ class ScheduleManagementViewModel : ViewModel() {
 
         if (startTime.isBlank()) return "Please select a start time."
         if (endTime.isBlank()) return "End time is missing (should be 3 hours after start)."
-        if (roomId == 0) return "Please select a room."
         
         val start = parseTime(startTime) ?: return "Start time format is invalid."
         val end = parseTime(endTime) ?: return "End time format is invalid."
         
+        // Time Range Validation: 8:00 AM to 6:00 PM
+        val startCal = Calendar.getInstance().apply { timeInMillis = start }
+        val endCal = Calendar.getInstance().apply { timeInMillis = end }
+        
+        val startHour = startCal.get(Calendar.HOUR_OF_DAY)
+        val endHour = endCal.get(Calendar.HOUR_OF_DAY)
+        val endMinute = endCal.get(Calendar.MINUTE)
+
+        if (startHour < 8 || endHour > 18 || (endHour == 18 && endMinute > 0)) {
+            return "The time is invalid. Select only the right time."
+        }
+
         if (end <= start) return "End time must be after start time."
+        if (roomId == 0) return "Please select a room."
         if (panelistIds.isEmpty()) return "Select at least one panelist."
         if (panelistIds.size > 2) return "A maximum of 2 panelists can be selected."
         

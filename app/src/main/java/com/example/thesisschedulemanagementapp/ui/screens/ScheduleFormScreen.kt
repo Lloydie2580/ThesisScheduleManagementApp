@@ -1,8 +1,10 @@
 package com.example.thesisschedulemanagementapp.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -33,8 +35,6 @@ import com.example.thesisschedulemanagementapp.ui.theme.Dimens
 import com.example.thesisschedulemanagementapp.ui.components.models.ButtonType
 import com.example.thesisschedulemanagementapp.viewmodel.ScheduleManagementViewModel
 import androidx.compose.ui.Alignment
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Spacer
 
 @Composable
 fun ScheduleFormScreen(
@@ -56,7 +56,10 @@ fun ScheduleFormScreen(
     var date by remember(schedule) { mutableStateOf(schedule?.defenseDate.orEmpty()) }
     var startTime by remember(schedule) { mutableStateOf(schedule?.startTime.orEmpty()) }
     var endTime by remember(schedule) { mutableStateOf(schedule?.endTime.orEmpty()) }
-    var roomId by remember(schedule) { mutableStateOf(schedule?.roomId ?: 0) }
+    
+    // Room is now automatically set to Room TBA (ID 1) and not pickable
+    val roomId = 1
+    
     var status by remember(schedule) { mutableStateOf(schedule?.status.orEmpty().ifBlank { "Pending" }) }
     var groupAdviserId by remember(schedule) { mutableStateOf(schedule?.adviserId ?: 0) }
 
@@ -101,7 +104,7 @@ fun ScheduleFormScreen(
             title = "Defense Details",
             subtitle = "Fill in the schedule information below."
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) { // Use SpaceXS (4dp) for tightest field grouping
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) { 
 
                 PickerField(
                     label = "Group Code",
@@ -147,7 +150,6 @@ fun ScheduleFormScreen(
                         modifier = Modifier.weight(1f)
                     )
                     
-                    // Display End Time as a disabled AppTextField to make it clearly non-editable but visible
                     AppTextField(
                         value = endTime,
                         onValueChange = {},
@@ -158,13 +160,14 @@ fun ScheduleFormScreen(
                     )
                 }
 
-                PickerField(
+                // Room is now automatically set to Room TBA and not pickable
+                AppTextField(
+                    value = "Room TBA",
+                    onValueChange = {},
                     label = "Room (Venue)",
-                    selectedKey = roomId,
-                    items = viewModel.rooms,
-                    key = { it.roomId },
-                    text = { it.roomName }
-                ) { roomId = it }
+                    readOnly = true,
+                    enabled = false
+                )
 
                 PickerField(
                     label = "Status",

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -88,16 +89,25 @@ fun CreateGroupScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
-                    students.forEach { student ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = selectedMembers.contains(student.userId),
-                                onCheckedChange = { isChecked ->
-                                    if (isChecked) selectedMembers.add(student.userId) else selectedMembers.remove(student.userId)
-                                }
-                            )
-                            Text(student.fullName ?: "Unknown Student")
+                if (students.isEmpty()) {
+                    Text(
+                        text = "No available students found. Make sure students have registered and are not yet in a group.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(vertical = Dimens.SpaceS)
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
+                        students.forEach { student ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(
+                                    checked = selectedMembers.contains(student.userId),
+                                    onCheckedChange = { isChecked ->
+                                        if (isChecked) selectedMembers.add(student.userId) else selectedMembers.remove(student.userId)
+                                    }
+                                )
+                                Text(student.fullName ?: "Unknown Student")
+                            }
                         }
                     }
                 }
@@ -108,24 +118,35 @@ fun CreateGroupScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
-                    professors.filter { it.userId != user?.userId }.forEach { professor ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = selectedPanelists.contains(professor.userId),
-                                onCheckedChange = { isChecked ->
-                                    if (isChecked) {
-                                        if (selectedPanelists.size < 2) {
-                                            selectedPanelists.add(professor.userId)
+                val otherProfessors = professors.filter { it.userId != user?.userId }
+                
+                if (otherProfessors.isEmpty()) {
+                    Text(
+                        text = "No other professors available to act as panelists.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(vertical = Dimens.SpaceS)
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
+                        otherProfessors.forEach { professor ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(
+                                    checked = selectedPanelists.contains(professor.userId),
+                                    onCheckedChange = { isChecked ->
+                                        if (isChecked) {
+                                            if (selectedPanelists.size < 2) {
+                                                selectedPanelists.add(professor.userId)
+                                            } else {
+                                                viewModel.setMessage("A maximum of 2 panelists can be selected.")
+                                            }
                                         } else {
-                                            viewModel.setMessage("A maximum of 2 panelists can be selected.")
+                                            selectedPanelists.remove(professor.userId)
                                         }
-                                    } else {
-                                        selectedPanelists.remove(professor.userId)
                                     }
-                                }
-                            )
-                            Text(professor.fullName ?: "Unknown Professor")
+                                )
+                                Text(professor.fullName ?: "Unknown Professor")
+                            }
                         }
                     }
                 }
