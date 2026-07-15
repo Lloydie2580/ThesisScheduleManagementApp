@@ -27,6 +27,14 @@ import com.example.thesisschedulemanagementapp.ui.components.feedback.StatusChip
 import com.example.thesisschedulemanagementapp.ui.components.models.ButtonType
 import com.example.thesisschedulemanagementapp.ui.components.models.ScheduleStatus
 import com.example.thesisschedulemanagementapp.ui.theme.*
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.material3.IconButton
 
 @Composable
 fun ScheduleCard(
@@ -36,12 +44,16 @@ fun ScheduleCard(
     currentUserId: Int? = null,
     onEdit: (() -> Unit)? = null,
     onCancel: (() -> Unit)? = null,
-    onComplete: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     onApprove: (() -> Unit)? = null,
     onRetractApproval: (() -> Unit)? = null,
     onReject: (() -> Unit)? = null
 ) {
+
+    var showDeleteDialog by remember {
+        mutableStateOf(false)
+    }
+
     AppCard(modifier = modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
 
@@ -64,9 +76,30 @@ fun ScheduleCard(
 
                 Spacer(modifier = Modifier.width(Dimens.SpaceS))
 
-                StatusChip(
-                    status = ScheduleStatus.from(schedule.status ?: "")
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)
+                ) {
+
+                    StatusChip(
+                        status = ScheduleStatus.from(schedule.status ?: "")
+                    )
+
+                    if (canManage && onDelete != null) {
+                        IconButton(
+                            onClick = {
+                                showDeleteDialog = true
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Delete Schedule",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
@@ -128,7 +161,7 @@ fun ScheduleCard(
             }
 
             // Management Buttons
-            if (canManage || onApprove != null || onReject != null) {
+            if (canManage || onApprove != null || onRetractApproval != null || onReject != null) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
                 @OptIn(ExperimentalLayoutApi::class)
@@ -164,24 +197,6 @@ fun ScheduleCard(
                                 onClick = it
                             )
                         }
-
-                        onComplete?.let {
-                            AppButton(
-                                text = "Complete",
-                                buttonType = ButtonType.PRIMARY,
-                                fullWidth = false,
-                                onClick = it
-                            )
-                        }
-
-                        onDelete?.let {
-                            AppButton(
-                                text = "Delete",
-                                buttonType = ButtonType.DANGER,
-                                fullWidth = false,
-                                onClick = it
-                            )
-                        }
                     }
 
                     // Specific Panelist actions
@@ -204,6 +219,40 @@ fun ScheduleCard(
                 }
             }
         }
+    }
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteDialog = false
+            },
+            title = {
+                Text("Delete Schedule?")
+            },
+            text = {
+                Text(
+                    "Are you sure you want to delete this defense schedule? This action cannot be undone."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete?.invoke()
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

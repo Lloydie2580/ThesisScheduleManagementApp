@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -17,7 +16,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
@@ -34,6 +32,9 @@ import com.example.thesisschedulemanagementapp.ui.components.common.PickerField
 import com.example.thesisschedulemanagementapp.ui.theme.Dimens
 import com.example.thesisschedulemanagementapp.ui.components.models.ButtonType
 import com.example.thesisschedulemanagementapp.viewmodel.ScheduleManagementViewModel
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Spacer
 
 @Composable
 fun ScheduleFormScreen(
@@ -180,25 +181,50 @@ fun ScheduleFormScreen(
                     modifier = Modifier.padding(top = Dimens.SpaceS)
                 )
 
-                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXXS)) {
-                    availableProfessors.forEach { professor ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = selectedPanelists.contains(professor.userId),
-                                onCheckedChange = { isChecked ->
-                                    if (isChecked) {
-                                        if (selectedPanelists.size < 2) {
-                                            selectedPanelists.add(professor.userId)
-                                        } else {
-                                            viewModel.setMessage("A maximum of 2 panelists can be selected.")
-                                        }
-                                    } else {
-                                        selectedPanelists.remove(professor.userId)
-                                    }
+                if (selectedPanelists.isEmpty()) {
+                    Text(
+                        text = "No panelists assigned",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)
+                    ) {
+                        availableProfessors
+                            .filter { selectedPanelists.contains(it.userId) }
+                            .forEach { professor ->
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            MaterialTheme.colorScheme.surfaceVariant,
+                                            shape = MaterialTheme.shapes.medium
+                                        )
+                                        .padding(
+                                            horizontal = Dimens.SpaceM,
+                                            vertical = Dimens.SpaceS
+                                        ),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = professor.fullName ?: "Unknown Professor",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+
+                                    Spacer(
+                                        modifier = Modifier.weight(1f)
+                                    )
+
+                                    Text(
+                                        text = "Assigned",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
                                 }
-                            )
-                            Text(professor.fullName ?: "Unknown Professor")
-                        }
+                            }
                     }
                 }
 

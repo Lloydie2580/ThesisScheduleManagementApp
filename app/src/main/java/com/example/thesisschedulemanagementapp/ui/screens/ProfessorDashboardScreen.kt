@@ -6,9 +6,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.example.thesisschedulemanagementapp.data.model.DefenseSchedule
 import com.example.thesisschedulemanagementapp.data.model.User
+import com.example.thesisschedulemanagementapp.ui.components.calendar.DashboardCalendar
 import com.example.thesisschedulemanagementapp.ui.components.cards.GroupCard
 import com.example.thesisschedulemanagementapp.ui.components.cards.ScheduleCard
 import com.example.thesisschedulemanagementapp.ui.components.common.AppButton
@@ -21,6 +25,26 @@ import com.example.thesisschedulemanagementapp.ui.components.models.ButtonType
 import com.example.thesisschedulemanagementapp.ui.theme.Dimens
 import com.example.thesisschedulemanagementapp.viewmodel.ProfessorDashboardViewModel
 import com.example.thesisschedulemanagementapp.viewmodel.ScheduleManagementViewModel
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 
 @Composable
 fun ProfessorDashboardScreen(
@@ -38,6 +62,13 @@ fun ProfessorDashboardScreen(
     val schedulesState by viewModel.schedules.collectAsState()
     val groupsState by viewModel.groups.collectAsState()
     val message by scheduleViewModel.message.collectAsState()
+
+    var scheduleFilter by remember {
+        mutableStateOf("All")
+    }
+    var expandedFilter by remember {
+        mutableStateOf(false)
+    }
 
     LaunchedEffect(user?.userId) {
         user?.let { viewModel.load(it.userId) }
@@ -57,6 +88,18 @@ fun ProfessorDashboardScreen(
             user = user,
             onLogout = onLogout,
             onNotifications = onOpenNotifications
+        )
+
+        SectionHeader(
+            title = "Defense Calendar",
+            subtitle = "View your scheduled defenses"
+        )
+
+
+        DashboardCalendar(
+            schedules = schedulesState.data ?: emptyList(),
+            user = user,
+            onEditSchedule = onEditSchedule
         )
 
         Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
@@ -106,55 +149,142 @@ fun ProfessorDashboardScreen(
             val adviseeSchedules = allSchedules.filter { it.adviserId == user?.userId }
             val panelistSchedules = allSchedules.filter { it.adviserId != user?.userId }
 
-            if (adviseeSchedules.isNotEmpty()) {
-                SectionHeader(
-                    title = "My Advisee Defenses",
-                    subtitle = "Schedules you created for your supervisees"
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-                    adviseeSchedules.forEach { schedule ->
-                        val hasApproved = schedule.adviserApproved
-                        
-                        ScheduleCard(
-                            schedule = schedule,
-                            canManage = true,
-                            currentUserId = user?.userId,
-                            onEdit = { onEditSchedule(schedule) },
-                            onCancel = { user?.let { scheduleViewModel.cancel(schedule.scheduleId, it.userId) } },
-                            onComplete = { user?.let { scheduleViewModel.complete(schedule.scheduleId, it.userId) } },
-                            onDelete = { user?.let { scheduleViewModel.delete(schedule.scheduleId, it.userId) } },
-                            // Show Approve button if the adviser hasn't approved yet (e.g. for student requests)
-                            onApprove = if (!hasApproved) {
-                                { user?.let { scheduleViewModel.approve(schedule.scheduleId, it.userId, it.fullName ?: "Professor") } }
-                            } else null
+            val displayedSchedules = when(scheduleFilter) {
+                "My Advisees" -> adviseeSchedules
+                "Panelist Assignments" -> panelistSchedules
+                else -> allSchedules
+            }
+
+            SectionHeader(
+                title = "Defense Schedules",
+                subtitle = "Manage your advisee and panelist assignments"
+            )
+
+            Box {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            expandedFilter = true
+                        }
+                        .padding(Dimens.SpaceS),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = scheduleFilter,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = null
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = expandedFilter,
+                    onDismissRequest = {
+                        expandedFilter = false
+                    }
+                ) {
+                    listOf(
+                        "All",
+                        "My Advisees",
+                        "Panelist Assignments"
+                    ).forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                scheduleFilter = option
+                                expandedFilter = false
+                            }
                         )
                     }
                 }
             }
 
-            if (panelistSchedules.isNotEmpty()) {
-                SectionHeader(
-                    title = "Panelist Assignments",
-                    subtitle = "Defenses where you are an invited evaluator"
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-                    panelistSchedules.forEach { schedule ->
-                        val myPanelistInfo = schedule.panelists?.find { it.userId == user?.userId }
-                        val hasApproved = myPanelistInfo?.isApproved == true
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)
+            ) {
+                items(displayedSchedules) { schedule ->
 
-                        ScheduleCard(
-                            schedule = schedule,
-                            canManage = false,
-                            currentUserId = user?.userId,
-                            onApprove = if (!hasApproved) {
-                                { user?.let { scheduleViewModel.approve(schedule.scheduleId, it.userId, it.fullName ?: "Professor") } }
-                            } else null,
-                            onRetractApproval = if (hasApproved) {
-                                { user?.let { scheduleViewModel.cancelApproval(schedule.scheduleId, it.userId, it.fullName ?: "Professor") } }
-                            } else null,
-                            onReject = { user?.let { scheduleViewModel.reject(schedule.scheduleId, it.userId) } }
-                        )
-                    }
+                    val isMyAdvisee = schedule.adviserId == user?.userId
+
+                    val myPanelistInfo = schedule.panelists
+                        ?.find { it.userId == user?.userId }
+
+                    val hasApproved = myPanelistInfo?.isApproved == true
+
+                    ScheduleCard(
+                        modifier = Modifier.width(320.dp),
+                        schedule = schedule,
+                        canManage = isMyAdvisee,
+                        currentUserId = user?.userId,
+
+                        onEdit = if (isMyAdvisee) {
+                            {
+                                onEditSchedule(schedule)
+                            }
+                        } else null,
+
+                        onCancel = if (isMyAdvisee) {
+                            {
+                                user?.let {
+                                    scheduleViewModel.cancel(
+                                        schedule.scheduleId,
+                                        it.userId
+                                    )
+                                }
+                            }
+                        } else null,
+
+                        onDelete = if (isMyAdvisee) {
+                            {
+                                user?.let {
+                                    scheduleViewModel.delete(
+                                        schedule.scheduleId,
+                                        it.userId
+                                    )
+                                }
+                            }
+                        } else null,
+
+                        onApprove = if (!isMyAdvisee && !hasApproved) {
+                            {
+                                user?.let {
+                                    scheduleViewModel.approve(
+                                        schedule.scheduleId,
+                                        it.userId,
+                                        it.fullName ?: "Professor"
+                                    )
+                                }
+                            }
+                        } else null,
+
+                        onRetractApproval = if (!isMyAdvisee && hasApproved) {
+                            {
+                                user?.let {
+                                    scheduleViewModel.cancelApproval(
+                                        schedule.scheduleId,
+                                        it.userId,
+                                        it.fullName ?: "Professor"
+                                    )
+                                }
+                            }
+                        } else null,
+
+                        onReject = if (!isMyAdvisee && !hasApproved) {
+                            {
+                                user?.let {
+                                    scheduleViewModel.reject(
+                                        schedule.scheduleId,
+                                        it.userId
+                                    )
+                                }
+                            }
+                        } else null
+                    )
                 }
             }
         } else if (schedulesState.loading) {
