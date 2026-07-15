@@ -108,6 +108,9 @@ private fun HeaderIconButton(
 }
 
 private fun greeting(): String {
-    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-    return "Good Afternoon"
+    return when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
+        in 0..11 -> "Good Morning,"
+        in 12..16 -> "Good Afternoon,"
+        else -> "Good Evening,"
+    }
 }
