@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.thesisschedulemanagementapp.data.model.User
 import com.example.thesisschedulemanagementapp.ui.components.common.AppButton
 import com.example.thesisschedulemanagementapp.ui.components.common.AppTextField
+import com.example.thesisschedulemanagementapp.ui.components.common.PasswordChecklist
 import com.example.thesisschedulemanagementapp.ui.components.common.RoleSelector
 import com.example.thesisschedulemanagementapp.ui.components.headers.AuthHeader
 import com.example.thesisschedulemanagementapp.ui.components.layout.FormPanel
@@ -26,6 +27,7 @@ import com.example.thesisschedulemanagementapp.ui.components.layout.ScreenScaffo
 import com.example.thesisschedulemanagementapp.ui.components.models.ButtonType
 import com.example.thesisschedulemanagementapp.ui.theme.Dimens
 import com.example.thesisschedulemanagementapp.ui.theme.ThesisScheduleManagementTheme
+import com.example.thesisschedulemanagementapp.data.util.Validators
 import com.example.thesisschedulemanagementapp.viewmodel.UiState
 
 @Composable
@@ -38,13 +40,25 @@ fun SignUpScreen(
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
+    val emailTouched = email.isNotBlank()
+    val isEmailValid = Validators.isValidEmail(email)
+
+    val passwordRequirements = Validators.passwordRequirements(password)
+    val isPasswordValid = Validators.isPasswordValid(password)
+
+    val confirmTouched = confirmPassword.isNotBlank()
+    val passwordsMatch = password == confirmPassword
 
     val valid =
         fullName.isNotBlank() &&
-                email.isNotBlank() &&
-                password.isNotBlank() &&
+                isEmailValid &&
+                isPasswordValid &&
+                passwordsMatch &&
                 role.isNotBlank()
 
     ScreenScaffold(snackbarHostState) {
@@ -78,31 +92,66 @@ fun SignUpScreen(
                     onValueChange = { email = it },
                     label = "Email",
                     leadingIcon = Icons.Default.Email,
+                    isError = emailTouched && !isEmailValid,
+                    errorMessage = if (emailTouched && !isEmailValid)
+                        "Enter a valid email address (e.g. name@example.com)"
+                    else null,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
                         imeAction = ImeAction.Next
                     )
                 )
 
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
+
+                    AppTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = "Password",
+                        leadingIcon = Icons.Default.Lock,
+                        isPassword = !passwordVisible,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Next
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    imageVector =
+                                        if (passwordVisible)
+                                            Icons.Default.VisibilityOff
+                                        else
+                                            Icons.Default.Visibility,
+                                    contentDescription = null
+                                )
+                            }
+                        }
+                    )
+
+                    if (password.isNotBlank()) {
+                        PasswordChecklist(requirements = passwordRequirements)
+                    }
+                }
+
                 AppTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = "Password",
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = "Confirm Password",
                     leadingIcon = Icons.Default.Lock,
-                    isPassword = !passwordVisible,
+                    isPassword = !confirmPasswordVisible,
+                    isError = confirmTouched && !passwordsMatch,
+                    errorMessage = if (confirmTouched && !passwordsMatch)
+                        "Passwords do not match"
+                    else null,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Done
                     ),
                     trailingIcon = {
-                        IconButton(
-                            onClick = {
-                                passwordVisible = !passwordVisible
-                            }
-                        ) {
+                        IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                             Icon(
                                 imageVector =
-                                    if (passwordVisible)
+                                    if (confirmPasswordVisible)
                                         Icons.Default.VisibilityOff
                                     else
                                         Icons.Default.Visibility,
