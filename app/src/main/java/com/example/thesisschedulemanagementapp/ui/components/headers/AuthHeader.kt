@@ -20,7 +20,7 @@ import com.example.thesisschedulemanagementapp.ui.theme.PrimaryContainer
 @Composable
 fun AuthHeader(
     title: String,
-    subtitle: String
+    subtitle: String? = null
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -52,10 +52,12 @@ fun AuthHeader(
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        if (!subtitle.isNullOrBlank()) {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }

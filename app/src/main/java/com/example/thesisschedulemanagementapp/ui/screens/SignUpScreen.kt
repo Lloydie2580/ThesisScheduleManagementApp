@@ -64,8 +64,7 @@ fun SignUpScreen(
     ScreenScaffold(snackbarHostState) {
 
         AuthHeader(
-            title = "Create Account",
-            subtitle = "Join the Thesis Schedule Management System"
+            title = "Create Account"
         )
 
         FormPanel(
