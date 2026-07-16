@@ -47,6 +47,12 @@ function parse_time_input($value) {
     return $time->format("H:i:s");
 }
 
+function validate_schedule_time_range($start, $end) {
+    if ($start < "07:00:00" || $end > "20:45:00") {
+        send_response(false, "Schedules must be between 7:00 AM and 8:45 PM.");
+    }
+}
+
 function format_date_output($value) {
     return date("m/d/Y", strtotime($value));
 }
@@ -123,16 +129,16 @@ function schedule_conflict_message($pdo, $group_id, $adviser_id, $room_id, $date
     $exclude_sql = $exclude_schedule_id ? " AND schedule_id <> ?" : "";
     $exclude_panel_sql = $exclude_schedule_id ? " AND ds.schedule_id <> ?" : "";
 
-    $params = [$room_id, $date, $start, $end];
+    $params = [$date, $start, $end];
     if ($exclude_schedule_id) $params[] = $exclude_schedule_id;
     $stmt = $pdo->prepare("
         SELECT schedule_id FROM defense_schedules
-        WHERE room_id = ? AND defense_date = ? AND status <> 'Cancelled'
+        WHERE defense_date = ? AND status <> 'Cancelled'
         AND start_time < ? AND end_time > ? $exclude_sql
         LIMIT 1
     ");
     $stmt->execute($params);
-    if ($stmt->fetch()) return "Room is already booked for the selected date and time.";
+    if ($stmt->fetch()) return "Another defense schedule already exists for the selected date and time.";
 
     $params = [$adviser_id, $date, $start, $end];
     if ($exclude_schedule_id) $params[] = $exclude_schedule_id;
@@ -144,16 +150,6 @@ function schedule_conflict_message($pdo, $group_id, $adviser_id, $room_id, $date
     ");
     $stmt->execute($params);
     if ($stmt->fetch()) return "Adviser already has another schedule for the selected date and time.";
-
-    $params = [$group_id];
-    if ($exclude_schedule_id) $params[] = $exclude_schedule_id;
-    $stmt = $pdo->prepare("
-        SELECT schedule_id FROM defense_schedules
-        WHERE group_id = ? AND status <> 'Cancelled' $exclude_sql
-        LIMIT 1
-    ");
-    $stmt->execute($params);
-    if ($stmt->fetch()) return "Student group already has another defense schedule.";
 
     foreach ($panelist_ids as $panelist_id) {
         $params = [$panelist_id, $date, $start, $end];

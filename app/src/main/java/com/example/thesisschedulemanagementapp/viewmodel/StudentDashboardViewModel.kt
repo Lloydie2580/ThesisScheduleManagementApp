@@ -45,7 +45,7 @@ class StudentDashboardViewModel : ViewModel() {
             _studentGroup.value = UiState(loading = true)
             groupRepository.getStudentGroup(studentId).fold(
                 onSuccess = { _studentGroup.value = UiState(data = it, success = true) },
-                onFailure = { _studentGroup.value = UiState(message = it.message, success = false) }
+                onFailure = { _studentGroup.value = UiState(data = null, message = it.message, success = false) }
             )
         }
     }

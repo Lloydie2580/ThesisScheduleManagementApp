@@ -151,12 +151,14 @@ fun ScheduleCard(
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    Text(
-                        text = schedule.panelists!!.joinToString {
-                            it.fullName ?: "Unknown"
-                        },
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXXS)) {
+                        schedule.panelists!!.forEach { panelist ->
+                            Text(
+                                text = panelist.fullName ?: "Unknown",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
                 }
             }
 

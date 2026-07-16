@@ -3,7 +3,7 @@ require_once "db.php";
 require_once "helpers.php";
 
 $data = read_json_input();
-require_fields($data, ["group_id", "research_title", "defense_date", "start_time", "end_time", "room_id", "adviser_id", "status", "requester_id"]);
+require_fields($data, ["group_id", "research_title", "defense_date", "start_time", "end_time", "room_id", "status", "requester_id", "requester_role"]);
 
 $panelist_ids = $data["panelist_ids"] ?? [];
 if (!is_array($panelist_ids) || count($panelist_ids) === 0) send_response(false, "At least one panelist is required.");
@@ -13,6 +13,7 @@ $defense_date = parse_date_input($data["defense_date"]);
 $start_time = parse_time_input($data["start_time"]);
 $end_time = parse_time_input($data["end_time"]);
 if ($end_time <= $start_time) send_response(false, "End time must be after start time.");
+validate_schedule_time_range($start_time, $end_time);
 
 // Authorization check
 $group_id = $data["group_id"];
@@ -48,6 +49,20 @@ if (!$is_authorized) send_response(false, "Unauthorized request.");
 
 $conflict = schedule_conflict_message($pdo, $group_id, $actual_adviser_id, $data["room_id"], $defense_date, $start_time, $end_time, $panelist_ids);
 if ($conflict) send_response(false, $conflict);
+
+$stmt = $pdo->prepare("
+    SELECT schedule_id
+    FROM defense_schedules
+    WHERE defense_date = ?
+      AND status <> 'Cancelled'
+      AND start_time < ?
+      AND end_time > ?
+    LIMIT 1
+");
+$stmt->execute([$defense_date, $end_time, $start_time]);
+if ($stmt->fetch()) {
+    send_response(false, "Another defense schedule already exists for the selected date and time.");
+}
 
 $adviser_approved = ($requester_role === "professor" && $requester_id == $actual_adviser_id) ? 1 : 0;
 

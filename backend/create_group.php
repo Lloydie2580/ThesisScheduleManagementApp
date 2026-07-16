@@ -4,6 +4,7 @@ require_once "helpers.php";
 
 $data = read_json_input();
 require_fields($data, ["research_title", "adviser_id", "member_ids", "program"]);
+
 $panelist_ids = $data["panelist_ids"] ?? [];
 $year = date("Y");
 $program = str_replace(' ', '', strtoupper($data["program"]));

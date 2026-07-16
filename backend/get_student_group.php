@@ -49,7 +49,7 @@ try {
 
         send_response(true, "Group found.", $group);
     } else {
-        send_response(false, "No group found for this student.");
+        send_response(true, "No group found for this student.", null);
     }
 } catch (Exception $e) {
     send_response(false, "Error: " . $e->getMessage());

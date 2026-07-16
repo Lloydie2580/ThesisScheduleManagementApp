@@ -55,9 +55,13 @@ class ScheduleManagementViewModel : ViewModel() {
 
     fun loadStudentOptions(studentId: Int) {
         viewModelScope.launch {
+            _groups.value = emptyList()
             groupRepository.getStudentGroup(studentId).fold(
                 onSuccess = { group -> _groups.value = group?.let { listOf(it) } ?: emptyList() },
-                onFailure = { setMessage("Couldn't load your group: ${it.message ?: "unknown error"}") }
+                onFailure = {
+                    _groups.value = emptyList()
+                    setMessage("Couldn't load your group: ${it.message ?: "unknown error"}")
+                }
             )
             professorRepository.getProfessors().fold(
                 onSuccess = { _professors.value = it },
@@ -110,7 +114,7 @@ class ScheduleManagementViewModel : ViewModel() {
         val start = parseTime(startTime) ?: return "Start time format is invalid."
         val end = parseTime(endTime) ?: return "End time format is invalid."
         
-        // Time Range Validation: 8:00 AM to 6:00 PM
+        // Time Range Validation: 7:00 AM to 8:45 PM
         val startCal = Calendar.getInstance().apply { timeInMillis = start }
         val endCal = Calendar.getInstance().apply { timeInMillis = end }
         
@@ -118,8 +122,8 @@ class ScheduleManagementViewModel : ViewModel() {
         val endHour = endCal.get(Calendar.HOUR_OF_DAY)
         val endMinute = endCal.get(Calendar.MINUTE)
 
-        if (startHour < 8 || endHour > 18 || (endHour == 18 && endMinute > 0)) {
-            return "The time is invalid. Select only the right time."
+        if (startHour < 7 || endHour > 20 || (endHour == 20 && endMinute > 45)) {
+            return "Schedules must be between 7:00 AM and 8:45 PM."
         }
 
         if (end <= start) return "End time must be after start time."

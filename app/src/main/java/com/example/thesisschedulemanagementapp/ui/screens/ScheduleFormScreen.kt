@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -68,7 +67,12 @@ fun ScheduleFormScreen(
     }
 
     LaunchedEffect(groups) {
-        if (groupId == 0 && groups.size == 1) {
+        if (schedule == null && groups.isEmpty()) {
+            groupId = 0
+            researchTitle = ""
+            groupAdviserId = 0
+            selectedPanelists.clear()
+        } else if (groupId == 0 && groups.size == 1) {
             val group = groups.first()
             groupId = group.groupId
             researchTitle = group.researchTitle.orEmpty()
@@ -96,6 +100,19 @@ fun ScheduleFormScreen(
     }
 
     val isStudent = remember(user) { user?.role?.trim()?.equals("student", true) == true }
+
+    LaunchedEffect(user?.userId, schedule?.scheduleId) {
+        if (schedule == null) {
+            groupId = 0
+            researchTitle = ""
+            date = ""
+            startTime = ""
+            endTime = ""
+            status = "Pending"
+            groupAdviserId = 0
+            selectedPanelists.clear()
+        }
+    }
 
     ScreenScaffold(snackbarHostState) {
         BackHeader(title, onBack)
@@ -217,15 +234,6 @@ fun ScheduleFormScreen(
                                         fontWeight = FontWeight.Medium
                                     )
 
-                                    Spacer(
-                                        modifier = Modifier.weight(1f)
-                                    )
-
-                                    Text(
-                                        text = "Assigned",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
                                 }
                             }
                     }

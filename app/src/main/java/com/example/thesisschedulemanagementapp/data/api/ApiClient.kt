@@ -16,8 +16,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 object ApiClient {
-    // TIP: 10.0.2.2 is for Emulator only.
-    private const val BASE_URL = "http://10.0.2.2/thesis_schedule_api/"
+    // 10.0.2.2 is for Emulator only.
+    private const val BASE_URL = "http://192.168.1.44/thesis_schedule_api/"
 
     var baseUrl: String = BASE_URL
         private set

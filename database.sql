@@ -4,6 +4,7 @@ USE thesis_schedule_db;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS schedule_panelists;
 DROP TABLE IF EXISTS defense_schedules;
+DROP TABLE IF EXISTS group_panelists;
 DROP TABLE IF EXISTS group_members;
 DROP TABLE IF EXISTS student_groups;
 DROP TABLE IF EXISTS rooms;
@@ -89,6 +90,7 @@ CREATE INDEX idx_schedule_adviser_time ON defense_schedules(adviser_id, defense_
 CREATE INDEX idx_schedule_group ON defense_schedules(group_id);
 
 INSERT INTO rooms (room_name) VALUES
+('Room TBA'),
 ('R407'),
 ('E515'),
 ('Auditorium'),
@@ -102,6 +104,10 @@ INSERT INTO users (full_name, email, password_hash, role) VALUES
 ('Aurelia Sharlene O. Delos Santos', 'panelist2@example.com', '$2y$10$pwUBWNqRPNBMFlKAgFsC9.VzZvJOQGRmouKvNe74/d8x7tFpoIXa2', 'Professor');
 
 INSERT INTO student_groups (group_code, research_title, adviser_id) VALUES
-('2023CS001', 'Thesis and Capstone Defense Schedule Management Application', 2);
+('2026CS001', 'Thesis Defense Schedule Management Application', 2);
 
 INSERT INTO group_members (group_id, student_id) VALUES (1, 1);
+
+INSERT INTO group_panelists (group_id, professor_id) VALUES
+(1, 3),
+(1, 4);

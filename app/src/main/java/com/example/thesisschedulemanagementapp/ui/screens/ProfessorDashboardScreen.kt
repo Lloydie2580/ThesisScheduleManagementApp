@@ -61,7 +61,8 @@ fun ProfessorDashboardScreen(
 ) {
     val schedulesState by viewModel.schedules.collectAsState()
     val groupsState by viewModel.groups.collectAsState()
-    val message by scheduleViewModel.message.collectAsState()
+    val scheduleMessage by scheduleViewModel.message.collectAsState()
+    val dashboardMessage by viewModel.message.collectAsState()
 
     var scheduleFilter by remember {
         mutableStateOf("All")
@@ -74,11 +75,19 @@ fun ProfessorDashboardScreen(
         user?.let { viewModel.load(it.userId) }
     }
 
-    LaunchedEffect(message) {
-        message?.let {
+    LaunchedEffect(scheduleMessage) {
+        scheduleMessage?.let {
             snackbarHostState.showSnackbar(it.message)
             scheduleViewModel.clearMessage()
             user?.let { u -> viewModel.refreshSchedules(u.userId) }
+        }
+    }
+
+    LaunchedEffect(dashboardMessage) {
+        dashboardMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.setMessage(null)
+            user?.let { u -> viewModel.load(u.userId) }
         }
     }
 
@@ -115,7 +124,10 @@ fun ProfessorDashboardScreen(
             AppButton(
                 text = "Create Group",
                 buttonType = ButtonType.OUTLINED,
-                onClick = onCreateGroup
+                onClick = {
+                    scheduleViewModel.clearMessage()
+                    onCreateGroup()
+                }
             )
         }
 

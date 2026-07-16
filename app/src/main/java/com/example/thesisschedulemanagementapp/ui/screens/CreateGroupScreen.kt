@@ -36,6 +36,7 @@ fun CreateGroupScreen(
     snackbarHostState: SnackbarHostState,
     user: User?,
     viewModel: ProfessorDashboardViewModel,
+    onCreated: () -> Unit = {},
     onBack: () -> Unit
 ) {
     val students by viewModel.allStudents.collectAsState()
@@ -168,6 +169,7 @@ fun CreateGroupScreen(
                                 program = program,
                                 onSuccess = {
                                     loading = false
+                                    onCreated()
                                     onBack()
                                 },
                                 onError = { error ->

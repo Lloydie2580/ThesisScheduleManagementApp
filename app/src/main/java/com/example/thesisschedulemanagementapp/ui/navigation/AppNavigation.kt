@@ -178,6 +178,9 @@ fun AppNavigation() {
             snackbarHostState = snackbarHostState,
             user = user,
             viewModel = professorViewModel,
+            onCreated = {
+                professorViewModel.setMessage("Group created successfully.")
+            },
             onBack = {
                 user?.let { professorViewModel.load(it.userId) }
                 route = AppRoute.ProfessorDashboard
