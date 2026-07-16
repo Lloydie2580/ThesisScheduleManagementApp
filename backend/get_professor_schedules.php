@@ -14,7 +14,7 @@ $stmt = $pdo->prepare("
     JOIN rooms r ON ds.room_id = r.room_id
     LEFT JOIN schedule_panelists sp ON ds.schedule_id = sp.schedule_id
     WHERE ds.adviser_id = ? OR sp.professor_id = ?
-    ORDER BY ds.defense_date DESC, ds.start_time DESC
+    ORDER BY ds.defense_date ASC, ds.start_time ASC
 ");
 $stmt->execute([$professor_id, $professor_id]);
 
